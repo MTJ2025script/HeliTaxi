@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heli-Taxi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="illegal.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- jQuery - Required for illegal.js -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- UI Background Image -->
+    <div class="ui-background"></div>
+    
+    <!-- Flight HUD -->
+    <div id="flightHUD" class="hud-container" style="display: none;">
+        <div class="hud-card">
+            <div class="hud-header">
+                <h3>🚁 FLUG AKTIV</h3>
+            </div>
+            <div class="hud-content">
+                <div class="hud-item">
+                    <span class="hud-label">Dauer:</span>
+                    <span class="hud-value" id="flightDuration">00:00:00</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Distanz:</span>
+                    <span class="hud-value" id="flightDistance">0.00 km</span>
+                </div>
+                <div class="hud-item highlight">
+                    <span class="hud-label">Aktueller Preis:</span>
+                    <span class="hud-value" id="flightCost">$0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Kraftstoff:</span>
+                    <span class="hud-value" id="fuelConsumed">0.0 L</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boss Menu -->
+    <div id="bossMenu" class="menu-container" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🚁 Heli-Taxi Verwaltung</h1>
+                <button class="close-btn" onclick="closeMenu()">✕</button>
+            </div>
+            
+            <div class="menu-tabs">
+                <button class="tab-btn active" onclick="switchTab('dashboard', this)">Dashboard</button>
+                <button class="tab-btn" onclick="switchTab('employees', this)">Mitarbeiter</button>
+                <button class="tab-btn" onclick="switchTab('fleet', this)">Flotte</button>
+                <button class="tab-btn" onclick="switchTab('finances', this)">Finanzen</button>
+                <button class="tab-btn" onclick="switchTab('calendar', this)">📅 Kalender</button>
+                <button class="tab-btn" onclick="switchTab('settings', this)">Einstellungen</button>
+            </div>
+
+            <div class="menu-body">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Firmenkonto (Legal)</div>
+                                <div class="stat-value" id="companyBalance">$0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-account" id="illegalBalanceCard" style="display: none;">
+                            <div class="stat-icon">🚨</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Schwarze Kasse</div>
+                                <div class="stat-value" id="illegalBalance">$0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Flüge Gesamt</div>
+                                <div class="stat-value" id="totalFlights">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🚁</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Flottengröße</div>
+                                <div class="stat-value" id="fleetSize">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Im Dienst</div>
+                                <div class="stat-value" id="onDutyCount">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card military-access" id="militaryAccessCard" style="display: none;">
+                            <div class="stat-icon">🎖️</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Military Garage</div>
+                                <div class="stat-value">Verfügbar</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="toggleDuty()">
+                            <span id="dutyStatus">Im Dienst gehen</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="switchTab('calendar', document.querySelector('[onclick*=calendar]'))">
+                            <span>📅 Termine anzeigen</span>
+                        </button>
+                        <button class="btn btn-military" id="militaryGarageBtn" style="display: none;" onclick="openMilitaryGarage()">
+                            <span>🎖️ Military Garage</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Employees Tab -->
+                <div id="employees" class="tab-content">
+                    <div class="tab-actions">
+                        <button class="btn btn-success" onclick="showHireDialog()">+ Mitarbeiter einstellen</button>
+                    </div>
+                    <div id="employeeList" class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Rang</th>
+                                    <th>Gehalt</th>
+                                    <th>Status</th>
+                                    <th>Flüge</th>
+                                    <th>Rang setzen</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeTableBody">
+                                <tr>
+                                    <td colspan="7" class="no-data">Lade Mitarbeiter...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Fleet Tab -->
+                <div id="fleet" class="tab-content">
+                    <div class="tab-actions">
+                        <button class="btn btn-success" onclick="openVehicleShop()">🛒 Fahrzeug Shop</button>
+                    </div>
+                    <div id="vehicleList" class="vehicle-grid">
+                        <div class="loading">Lade Fahrzeuge...</div>
+                    </div>
+                </div>
+
+                <!-- Finances Tab -->
+                <div id="finances" class="tab-content">
+                    <div class="finance-overview">
+                        <div class="finance-card">
+                            <h3>💰 Legales Guthaben</h3>
+                            <div class="finance-amount" id="financeBalance">$0</div>
+                        </div>
+                        <div class="finance-card illegal-finance" id="illegalFinanceCard" style="display: none;">
+                            <h3>🚨 Schwarze Kasse</h3>
+                            <div class="finance-amount illegal" id="illegalFinanceBalance">$0</div>
+                        </div>
+                        <div class="finance-card">
+                            <h3>Gesamteinnahmen (Legal)</h3>
+                            <div class="finance-amount income" id="totalIncome">$0</div>
+                        </div>
+                        <div class="finance-card illegal-finance" id="illegalIncomeCard" style="display: none;">
+                            <h3>Einnahmen (Illegal)</h3>
+                            <div class="finance-amount income" id="illegalIncome">$0</div>
+                        </div>
+                        <div class="finance-card">
+                            <h3>Gesamtausgaben</h3>
+                            <div class="finance-amount expense" id="totalExpenses">$0</div>
+                        </div>
+                    </div>
+
+                    <div class="tab-actions">
+                        <button class="btn btn-success" onclick="showDepositDialog()">💵 Einzahlen</button>
+                        <button class="btn btn-warning" onclick="showWithdrawDialog()">💸 Abheben</button>
+                        <button class="btn btn-danger" id="washMoneyBtn" style="display: none;" onclick="showWashMoneyDialog()">🧼 Geld waschen</button>
+                    </div>
+
+                    <div id="transactionList" class="data-table">
+                        <div class="transaction-filters">
+                            <button class="filter-btn active" onclick="filterTransactions('all')">Alle</button>
+                            <button class="filter-btn" onclick="filterTransactions('legal')">Legal</button>
+                            <button class="filter-btn" id="illegalFilterBtn" style="display: none;" onclick="filterTransactions('illegal')">Illegal</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Typ</th>
+                                    <th>Betrag</th>
+                                    <th>Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionTableBody">
+                                <tr>
+                                    <td colspan="4" class="no-data">Lade Transaktionen...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Calendar Tab -->
+                <div id="calendar" class="tab-content">
+                    <h3>📅 Termin-Kalender</h3>
+                    
+                    <!-- Create Appointment Form -->
+                    <div class="calendar-form-section">
+                        <h4>Neuer Termin</h4>
+                        <div class="form-group">
+                            <label>Titel:</label>
+                            <input type="text" id="appointmentTitle" placeholder="z.B. Team Meeting">
+                        </div>
+                        <div class="form-group">
+                            <label>Beschreibung:</label>
+                            <textarea id="appointmentDescription" placeholder="Details zum Termin..." rows="3"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Datum:</label>
+                                <input type="date" id="appointmentDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Zeit:</label>
+                                <input type="time" id="appointmentTime">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="createAppointment()" id="createAppointmentBtn">
+                            <span>📅 Termin Erstellen</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="cancelEditAppointment()" id="cancelEditBtn" style="display: none;">
+                            <span>✕ Abbrechen</span>
+                        </button>
+                    </div>
+
+                    <!-- Appointments List -->
+                    <div class="calendar-list-section">
+                        <h4>Termine</h4>
+                        <div id="appointmentsList" class="appointments-list">
+                            <!-- Appointments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings" class="tab-content">
+                    <h3>Persönliche Einstellungen</h3>
+                    <div class="settings-section">
+                        <div class="setting-item">
+                            <label>Mitarbeiter ID:</label>
+                            <span id="employeeId">-</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Rang:</label>
+                            <span id="employeeRank">-</span>
+                        </div>
+                        <div class="setting-item" id="secretRoleSetting" style="display: none;">
+                            <label>🔐 Secret Role:</label>
+                            <span id="employeeSecretRole" class="secret-role-badge">-</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Gehalt:</label>
+                            <span id="employeeSalary">$0</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Flüge Gesamt:</label>
+                            <span id="employeeFlights">0</span>
+                        </div>
+                        <div class="setting-item" id="securityClearanceSetting" style="display: none;">
+                            <label>Security Clearance:</label>
+                            <span id="employeeSecurityClearance">None</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wardrobe Menu -->
+    <div id="wardrobeMenu" class="menu-container" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content small">
+            <div class="menu-header">
+                <h1>👔 Garderobe</h1>
+                <button class="close-btn" onclick="closeMenu()">✕</button>
+            </div>
+            <div class="menu-body">
+                <div class="wardrobe-options">
+                    <button class="outfit-btn" onclick="changeOutfit('pilot')">
+                        <div class="outfit-icon">✈️</div>
+                        <div class="outfit-name">Pilotenuniform</div>
+                    </button>
+                    <button class="outfit-btn" onclick="changeOutfit('civilian')">
+                        <div class="outfit-icon">👕</div>
+                        <div class="outfit-name">Zivilkleidung</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Management -->
+    <div id="vehicleManagement" class="menu-container" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🚁 Fahrzeugverwaltung</h1>
+                <button class="close-btn" onclick="closeMenu()">✕</button>
+            </div>
+            <div class="menu-body">
+                <div id="vehicleManagementContent">
+                    <div class="loading">Lade Fahrzeuge...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Shop -->
+    <div id="vehicleShop" class="menu-container" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🛒 Fahrzeug Shop</h1>
+                <button class="close-btn" onclick="closeVehicleShop()">✕</button>
+            </div>
+            <div class="menu-body">
+                <div class="shop-balance">
+                    Firmenguthaben: <span id="shopBalance">$0</span>
+                </div>
+                <div id="shopVehicleGrid" class="vehicle-grid">
+                    <div class="loading">Lade Shop...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog -->
+    <div id="customDialog" class="custom-dialog" style="display: none;">
+        <div class="dialog-content">
+            <h3 id="dialogTitle">Dialog</h3>
+            <p id="dialogMessage">Nachricht</p>
+            <input type="number" id="dialogInput" placeholder="Betrag eingeben..." style="display: none;" />
+            <div class="dialog-buttons">
+                <button class="btn btn-success" id="dialogConfirm">✓ Bestätigen</button>
+                <button class="btn btn-danger" id="dialogCancel">✗ Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passenger Taxi Dialog -->
+    <div id="passengerDialog" class="passenger-dialog" style="display: none;">
+        <div class="passenger-dialog-content">
+            <h2>🚁 Taxi-Fahrt buchen?</h2>
+            <p class="pilot-info">Pilot: <span id="pilotName"></span></p>
+            <div class="price-info">
+                <div class="price-item">
+                    <span class="price-label">Grundgebühr:</span>
+                    <span class="price-value" id="flatFeeDisplay">$0</span>
+                </div>
+                <div class="price-item">
+                    <span class="price-label">Pro Kilometer:</span>
+                    <span class="price-value" id="pricePerKmDisplay">$0</span>
+                </div>
+            </div>
+            <p class="info-text">Die Grundgebühr wird sofort abgebucht. Weitere Kosten entstehen pro geflogenem Kilometer.</p>
+            <div class="dialog-buttons">
+                <button class="btn btn-success" onclick="acceptTaxiRide()">✓ Akzeptieren</button>
+                <button class="btn btn-danger" onclick="declineTaxiRide()">✗ Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taxi HUD -->
+    <div id="taxiHUD" class="taxi-hud" style="display: none;">
+        <div class="taxi-hud-card">
+            <div class="taxi-hud-header">
+                <h3>🚁 TAXI-FAHRT AKTIV</h3>
+            </div>
+            <div class="taxi-hud-content">
+                <div class="taxi-hud-item">
+                    <span class="hud-label">Dauer:</span>
+                    <span class="hud-value" id="taxiDuration">00:00</span>
+                </div>
+                <div class="taxi-hud-item">
+                    <span class="hud-label">Distanz:</span>
+                    <span class="hud-value" id="taxiDistance">0.00 km</span>
+                </div>
+                <div class="taxi-hud-item">
+                    <span class="hud-label">Grundgebühr:</span>
+                    <span class="hud-value" id="taxiFlatFee">$0</span>
+                </div>
+                <div class="taxi-hud-item">
+                    <span class="hud-label">Distanz-Kosten:</span>
+                    <span class="hud-value" id="taxiDistanceCost">$0</span>
+                </div>
+                <div class="taxi-hud-item">
+                    <span class="hud-label">🕐 Steh-Zeit:</span>
+                    <span class="hud-value" id="taxiTimeCost">$0</span>
+                </div>
+                <div class="taxi-hud-item highlight">
+                    <span class="hud-label">Gesamt:</span>
+                    <span class="hud-value" id="taxiTotalCost">$0</span>
+                </div>
+            </div>
+            <div class="taxi-hud-footer">
+                <button class="btn-end-ride" onclick="endTaxiRide()">✅ Flug Beenden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Dialog -->
+    <div id="invoiceDialog" class="invoice-dialog" style="display: none;">
+        <div class="invoice-content">
+            <h2>📄 Taxi-Rechnung</h2>
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span class="invoice-label">Distanz:</span>
+                    <span class="invoice-value" id="invoiceDistance">0.00 km</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Dauer:</span>
+                    <span class="invoice-value" id="invoiceDuration">00:00</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Grundgebühr:</span>
+                    <span class="invoice-value" id="invoiceFlatFee">$0</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Distanz-Kosten:</span>
+                    <span class="invoice-value" id="invoiceDistanceCost">$0</span>
+                </div>
+                <div class="invoice-row total">
+                    <span class="invoice-label">Gesamt:</span>
+                    <span class="invoice-value" id="invoiceTotalCost">$0</span>
+                </div>
+                <div class="invoice-row balance">
+                    <span class="invoice-label">Ihr Kontostand:</span>
+                    <span class="invoice-value" id="invoiceBalance">$0</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="closeInvoice()">✓ Schließen</button>
+        </div>
+    </div>
+
+    <!-- Exclusive Missions UI -->
+    <iframe id="exclusiveMissionsFrame" src="exclusive-missions.html" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 10000; background: transparent;"></iframe>
+
+    <!-- Secret Role Assignment Dialog -->
+    <div id="secretRoleDialog" class="custom-dialog" style="display: none;">
+        <div class="dialog-content">
+            <h3>🔐 Secret Role zuweisen</h3>
+            <p id="secretRoleEmployeeName">Mitarbeiter: </p>
+            <div class="secret-role-options">
+                <button class="role-option-btn" onclick="assignSecretRole('vip_pilot')">
+                    <span class="role-icon">✈️</span>
+                    <span class="role-label">VIP Pilot</span>
+                    <span class="role-salary">$7,500/h</span>
+                </button>
+                <button class="role-option-btn" onclick="assignSecretRole('military_pilot')">
+                    <span class="role-icon">🎖️</span>
+                    <span class="role-label">Military Pilot</span>
+                    <span class="role-salary">$10,000/h</span>
+                </button>
+                <button class="role-option-btn" onclick="assignSecretRole('government_pilot')">
+                    <span class="role-icon">🏛️</span>
+                    <span class="role-label">Government Pilot</span>
+                    <span class="role-salary">$8,500/h</span>
+                </button>
+                <button class="role-option-btn" onclick="assignSecretRole('special_ops')">
+                    <span class="role-icon">⚡</span>
+                    <span class="role-label">Special Operations</span>
+                    <span class="role-salary">$15,000/h</span>
+                </button>
+                <button class="role-option-btn danger" onclick="assignSecretRole('gang_pilot')">
+                    <span class="role-icon">🚨</span>
+                    <span class="role-label">Gang Pilot</span>
+                    <span class="role-salary">$12,000/h</span>
+                </button>
+                <button class="role-option-btn neutral" onclick="assignSecretRole(null)">
+                    <span class="role-icon">❌</span>
+                    <span class="role-label">Role entfernen</span>
+                </button>
+            </div>
+            <button class="btn btn-danger" onclick="closeSecretRoleDialog()">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- Military Garage Menu -->
+    <div id="militaryGarageMenu" class="menu-container" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🎖️ Military Garage</h1>
+                <button class="close-btn" onclick="closeMilitaryGarage()">✕</button>
+            </div>
+            <div class="menu-tabs">
+                <button class="tab-btn active" onclick="switchMilitaryTab('vehicles', this)">Fahrzeuge</button>
+                <button class="tab-btn" onclick="switchMilitaryTab('shop', this)">Shop</button>
+            </div>
+            <div class="menu-body">
+                <div id="militaryVehicles" class="tab-content active">
+                    <div id="militaryVehicleList" class="vehicle-grid">
+                        <div class="loading">Lade Military Fahrzeuge...</div>
+                    </div>
+                </div>
+                <div id="militaryShop" class="tab-content">
+                    <div class="shop-balance">
+                        Firmenguthaben: <span id="militaryShopBalance">$0</span>
+                    </div>
+                    <div id="militaryShopGrid" class="vehicle-grid">
+                        <div class="loading">Lade Military Shop...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- ILLEGAL OPERATIONS UI - KOMPLETT GETRENNT -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    
+    <!-- ILLEGAL BACKGROUND -->
+    <div id="illegal-background" class="illegal-bg"></div>
+    <div id="illegal-overlay" class="illegal-bg-overlay"></div>
+    
+    <!-- ILLEGALES BOSS MENU (Tablet NPC) -->
+    <div id="illegal-boss-menu" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ILLEGAL OPERATIONS</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="black-cash-display">
+                <div class="cash-label">SCHWARZE KASSE</div>
+                <div class="cash-amount">$<span id="blackCash">0</span></div>
+            </div>
+            
+            <div class="illegal-actions">
+                <button class="illegal-btn" onclick="openIllegalShopFromMenu()">
+                    ARMY VEHICLES
+                </button>
+                <button class="illegal-btn" onclick="openIllegalGarageFromMenu()">
+                    ILLEGAL GARAGE
+                </button>
+                <button class="illegal-btn" onclick="manageIllegalOperations()">
+                    OPERATIONS
+                </button>
+                <button class="illegal-btn" onclick="viewIllegalTransactions()">
+                    TRANSAKTIONEN
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ILLEGALER SHOP (Army Helis) -->
+    <div id="illegal-shop" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ARMY VEHICLE SHOP</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="shop-warning">
+                MILITARY GRADE VEHICLES - HOHE HEAT
+            </div>
+            
+            <div id="illegal-vehicle-list" class="vehicle-grid">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ILLEGALE GARAGE (Helipad NPCs) -->
+    <div id="illegal-garage" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ILLEGAL GARAGE</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="garage-info">
+                <div class="helipad-name" id="helipadName">HELIPAD 1</div>
+            </div>
+            
+            <div id="illegal-garage-vehicles" class="vehicle-list">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+            
+            <div class="garage-actions">
+                <button class="illegal-btn" onclick="spawnIllegalVehicle()">SPAWN VEHICLE</button>
+                <button class="illegal-btn" onclick="storeIllegalVehicle()">STORE VEHICLE</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ILLEGALES MANAGEMENT -->
+    <div id="illegal-management" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ILLEGAL OPERATIONS MANAGEMENT</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="operations-stats">
+                <div class="stat-box">
+                    <div class="stat-label">HEAT LEVEL</div>
+                    <div class="stat-value" id="heatLevel">0%</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">OPERATIONS</div>
+                    <div class="stat-value" id="operationsCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">PROFIT</div>
+                    <div class="stat-value">$<span id="totalProfit">0</span></div>
+                </div>
+            </div>
+            
+            <div class="operations-list" id="operationsList">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="illegal.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illegal Operations</title>
+    <link rel="stylesheet" href="illegal.css">
+</head>
+<body>
+    <!-- ILLEGAL BACKGROUND - KOMPLETT EIGENSTÄNDIG -->
+    <div id="illegal-background" class="illegal-bg"></div>
+    <div id="illegal-overlay" class="illegal-bg-overlay"></div>
+    <!-- ILLEGALES BOSS MENU (Tablet NPC) -->
+    <div id="illegal-boss-menu" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ILLEGAL OPERATIONS</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="black-cash-display">
+                <div class="cash-label">SCHWARZE KASSE</div>
+                <div class="cash-amount">$<span id="blackCash">0</span></div>
+            </div>
+            
+            <div class="illegal-actions">
+                <button class="illegal-btn" onclick="openIllegalShopFromMenu()">
+                    ARMY VEHICLES
+                </button>
+                <button class="illegal-btn" onclick="openIllegalGarageFromMenu()">
+                    ILLEGAL GARAGE
+                </button>
+                <button class="illegal-btn" onclick="manageIllegalOperations()">
+                    OPERATIONS
+                </button>
+                <button class="illegal-btn" onclick="viewIllegalTransactions()">
+                    TRANSAKTIONEN
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ILLEGALER SHOP (Army Helis) -->
+    <div id="illegal-shop" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ARMY VEHICLE SHOP</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="shop-warning">
+                MILITARY GRADE VEHICLES - HOHE HEAT
+            </div>
+            
+            <div id="illegal-vehicle-list" class="vehicle-grid">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ILLEGALE GARAGE (Helipad NPCs) -->
+    <div id="illegal-garage" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ILLEGAL GARAGE</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="garage-info">
+                <div class="helipad-name" id="helipadName">HELIPAD 1</div>
+            </div>
+            
+            <div id="illegal-garage-vehicles" class="vehicle-list">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+            
+            <div class="garage-actions">
+                <button class="illegal-btn" onclick="spawnIllegalVehicle()">SPAWN VEHICLE</button>
+                <button class="illegal-btn" onclick="storeIllegalVehicle()">STORE VEHICLE</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ILLEGALES MANAGEMENT -->
+    <div id="illegal-management" class="illegal-container" style="display: none;">
+        <div class="illegal-header">
+            <h1>ILLEGAL OPERATIONS MANAGEMENT</h1>
+            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
+        </div>
+        
+        <div class="illegal-content">
+            <div class="operations-stats">
+                <div class="stat-box">
+                    <div class="stat-label">HEAT LEVEL</div>
+                    <div class="stat-value" id="heatLevel">0%</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">OPERATIONS</div>
+                    <div class="stat-value" id="operationsCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">PROFIT</div>
+                    <div class="stat-value">$<span id="totalProfit">0</span></div>
+                </div>
+            </div>
+            
+            <div class="operations-list" id="operationsList">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="illegal.js"></script>
+</body>
+</html>

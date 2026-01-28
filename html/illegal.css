@@ -1,0 +1,374 @@
+/* ILLEGALES UI - PROFESSIONELL & CLEAN */
+
+/* REMOVED - Don't override main body styles
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', 'Arial', sans-serif;
+    overflow: hidden;
+    background: #000000;
+}
+*/
+
+/* ILLEGAL BACKGROUND - KOMPLETT EIGENSTÄNDIG */
+.illegal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('illegal_background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -2;
+    display: none;
+}
+
+.illegal-bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 0, 0, 0.92);
+    backdrop-filter: blur(3px);
+    z-index: -1;
+    display: none;
+}
+
+body.illegal-active .illegal-bg,
+body.illegal-active .illegal-bg-overlay {
+    display: block;
+}
+
+.illegal-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1100px;
+    max-height: 700px;
+    background: rgba(18, 0, 0, 0.98);
+    border: 1px solid #8b0000;
+    border-left: 3px solid #ff0000;
+    box-shadow: 
+        0 2px 30px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(139, 0, 0, 0.3);
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.illegal-header {
+    background: rgba(20, 0, 0, 0.95);
+    padding: 20px 30px;
+    border-bottom: 1px solid #8b0000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.illegal-header h1 {
+    margin: 0;
+    color: #ff4444;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.close-btn {
+    background: transparent;
+    color: #999;
+    border: 1px solid #444;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 300;
+}
+
+.close-btn:hover {
+    background: #8b0000;
+    color: #fff;
+    border-color: #8b0000;
+}
+
+.illegal-content {
+    padding: 30px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* SCHWARZE KASSE DISPLAY */
+.black-cash-display {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #333;
+    border-left: 2px solid #00ff00;
+    padding: 25px 30px;
+    margin-bottom: 25px;
+}
+
+.cash-label {
+    color: #666;
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-weight: 400;
+}
+
+.cash-amount {
+    color: #00ff00;
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+/* ILLEGAL ACTIONS */
+.illegal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #8b0000;
+}
+
+.illegal-btn {
+    background: rgba(20, 0, 0, 0.8);
+    color: #ccc;
+    border: none;
+    padding: 18px 25px;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: left;
+}
+
+.illegal-btn:hover {
+    background: rgba(139, 0, 0, 0.4);
+    color: #fff;
+}
+
+/* SHOP WARNING */
+.shop-warning {
+    background: rgba(139, 0, 0, 0.2);
+    border: 1px solid #8b0000;
+    border-left: 3px solid #ff0000;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    color: #ff4444;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 1px;
+}
+
+/* VEHICLE GRID (Shop) */
+.vehicle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: #333;
+}
+
+.vehicle-card {
+    background: rgba(0, 0, 0, 0.8);
+    border: none;
+    padding: 20px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.vehicle-card:hover {
+    background: rgba(139, 0, 0, 0.3);
+}
+
+.vehicle-name {
+    color: #ff4444;
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.vehicle-price {
+    color: #00ff00;
+    font-size: 22px;
+    font-weight: 300;
+}
+
+.vehicle-stats {
+    color: #666;
+    font-size: 11px;
+    margin-top: 12px;
+    letter-spacing: 1px;
+}
+
+/* VEHICLE LIST (Garage) */
+.vehicle-list {
+    margin-bottom: 20px;
+}
+
+.vehicle-item {
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-left: 2px solid #333;
+    padding: 15px 20px;
+    margin-bottom: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.vehicle-item:hover {
+    background: rgba(139, 0, 0, 0.2);
+    border-left-color: #8b0000;
+}
+
+.vehicle-info {
+    color: #999;
+}
+
+.vehicle-info .name {
+    font-size: 14px;
+    font-weight: 400;
+    color: #ff4444;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.vehicle-info .plate {
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+/* GARAGE INFO */
+.garage-info {
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-left: 2px solid #8b0000;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.helipad-name {
+    color: #ff4444;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 3px;
+}
+
+/* OPERATIONS STATS */
+.operations-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin-bottom: 25px;
+    background: #333;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.8);
+    border: none;
+    padding: 25px;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    font-weight: 400;
+}
+
+.stat-value {
+    color: #ff4444;
+    font-size: 26px;
+    font-weight: 300;
+}
+
+/* OPERATIONS LIST */
+.operations-list {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.operation-item {
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-left: 2px solid #333;
+    padding: 15px 20px;
+    margin-bottom: 1px;
+    transition: all 0.2s;
+}
+
+.operation-item:hover {
+    background: rgba(139, 0, 0, 0.2);
+    border-left-color: #8b0000;
+}
+
+.operation-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.operation-type {
+    color: #ff4444;
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.operation-profit {
+    color: #00ff00;
+    font-weight: 300;
+    font-size: 14px;
+}
+
+.operation-details {
+    color: #666;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+/* SCROLLBAR */
+.illegal-content::-webkit-scrollbar,
+.operations-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.illegal-content::-webkit-scrollbar-track,
+.operations-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.illegal-content::-webkit-scrollbar-thumb,
+.operations-list::-webkit-scrollbar-thumb {
+    background: #ff0000;
+    border-radius: 4px;
+}
+
+.illegal-content::-webkit-scrollbar-thumb:hover,
+.operations-list::-webkit-scrollbar-thumb:hover {
+    background: #ff3333;
+}
+
+/* GARAGE ACTIONS */
+.garage-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 20px;
+    background: #8b0000;
+}
+
+.garage-actions .illegal-btn {
+    padding: 16px 20px;
+    font-size: 12px;
+}

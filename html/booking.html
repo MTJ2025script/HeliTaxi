@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heli-Taxi Buchung</title>
+    <link rel="stylesheet" href="booking-style.css">
+</head>
+<body>
+    <!-- BOOKING UI -->
+    <div id="booking-container" class="booking-container" style="display: none;">
+        <div class="booking-card">
+            <div class="booking-header">
+                <h1>🚁 HELI-TAXI</h1>
+                <p class="booking-subtitle">Schnell & Luxuriös</p>
+                <button class="close-btn" onclick="closeBooking()">✕</button>
+            </div>
+            
+            <div class="booking-content">
+                <!-- Status Info -->
+                <div class="status-banner">
+                    <div class="status-item">
+                        <span class="status-icon">👨‍✈️</span>
+                        <span id="pilotCount">0</span>
+                        <span class="status-label">Piloten Online</span>
+                    </div>
+                </div>
+                
+                <!-- Booking Form -->
+                <form id="bookingForm" class="booking-form">
+                    <div class="form-group">
+                        <label for="phoneNumber">📱 Telefonnummer</label>
+                        <input type="text" id="phoneNumber" placeholder="Deine Nummer für Rückruf" maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="passengerCount">👥 Passagiere</label>
+                        <select id="passengerCount">
+                            <option value="1">1 Passagier</option>
+                            <option value="2">2 Passagiere</option>
+                            <option value="3">3 Passagiere</option>
+                            <option value="4">4 Passagiere</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📍 Ziel</label>
+                        <div class="destination-options">
+                            <label class="radio-option">
+                                <input type="radio" name="destination" value="waypoint" checked>
+                                <span class="radio-label">GPS-Wegpunkt nutzen</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="destination" value="current">
+                                <span class="radio-label">Aktuelle Position</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="note">📝 Anmerkung (optional)</label>
+                        <textarea id="note" placeholder="z.B. Eilig, mehrere Stops, etc." rows="2"></textarea>
+                    </div>
+                    
+                    <!-- Price Info -->
+                    <div class="price-info">
+                        <div class="price-row">
+                            <span>Grundgebühr</span>
+                            <span id="baseFee">$500</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Pro Kilometer</span>
+                            <span id="kmPrice">$100</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <span class="btn-icon">📞</span>
+                        <span>TAXI BESTELLEN</span>
+                    </button>
+                </form>
+                
+                <!-- Alternative: Callback -->
+                <div class="callback-section">
+                    <p>Kein Pilot verfügbar?</p>
+                    <button class="callback-btn" onclick="requestCallback()">
+                        📲 Rückruf anfordern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SUCCESS MESSAGE -->
+    <div id="success-message" class="success-message" style="display: none;">
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+            <h2>Buchung gesendet!</h2>
+            <p>Ein Pilot wird Sie in Kürze kontaktieren.</p>
+            <button onclick="closeBooking()" class="ok-btn">OK</button>
+        </div>
+    </div>
+    
+    <!-- EMPLOYEE NOTIFICATION -->
+    <div id="employee-request" class="employee-request" style="display: none;">
+        <div class="request-card">
+            <div class="request-header">
+                <span class="request-icon">🚁</span>
+                <span class="request-title">NEUE BUCHUNG</span>
+            </div>
+            <div class="request-body">
+                <p><strong>Kunde:</strong> <span id="requestPhone">-</span></p>
+                <p><strong>Passagiere:</strong> <span id="requestPassengers">-</span></p>
+                <p><strong>Anmerkung:</strong> <span id="requestNote">-</span></p>
+                <p><strong>Zeit:</strong> <span id="requestTime">-</span></p>
+            </div>
+            <div class="request-actions">
+                <button class="accept-btn" onclick="acceptBooking()">✅ ANNEHMEN</button>
+                <button class="decline-btn" onclick="declineBooking()">❌ ABLEHNEN</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="booking-script.js"></script>
+</body>
+</html>

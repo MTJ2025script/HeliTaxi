@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heli-Taxi Phone App</title>
+    <link rel="stylesheet" href="phone-style.css">
+</head>
+<body>
+    <!-- PHONE APP UI -->
+    <div id="phone-app" class="phone-container" style="display: none;">
+        <div class="phone-header">
+            <div class="phone-logo">🚁 HELI-TAXI</div>
+            <button class="phone-close-btn" onclick="closePhoneApp()">✕</button>
+        </div>
+        
+        <div class="phone-content">
+            <!-- App Info Section -->
+            <div class="app-info-section">
+                <div class="company-status">
+                    <div class="status-item">
+                        <span class="status-icon">🚁</span>
+                        <span class="status-label">Verfügbare Helis</span>
+                        <span id="availableVehicles" class="status-value">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">👨‍✈️</span>
+                        <span class="status-label">Piloten Online</span>
+                        <span id="onlineEmployees" class="status-value">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Actions -->
+            <div class="phone-actions">
+                <button class="phone-action-btn primary" onclick="callTaxi()">
+                    <span class="action-icon">📞</span>
+                    <span class="action-text">TAXI RUFEN</span>
+                    <span class="action-desc">Lasse dich abholen</span>
+                </button>
+                
+                <div id="pickup-request" class="pickup-request-card" style="display: none;">
+                    <div class="request-header">
+                        <span class="request-icon">📍</span>
+                        <span class="request-title">AKTIVE ANFRAGE</span>
+                    </div>
+                    <div class="request-info">
+                        <p id="requestStatus">Warte auf Pilot...</p>
+                    </div>
+                    <button class="phone-action-btn danger" onclick="cancelRequest()">
+                        ANFRAGE ABBRECHEN
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Price Info -->
+            <div class="price-info-section">
+                <h3>💰 PREISE</h3>
+                <div class="price-grid">
+                    <div class="price-item">
+                        <span class="price-label">Grundgebühr</span>
+                        <span id="flatFee" class="price-value">$500</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-label">Pro Kilometer</span>
+                        <span id="pricePerKm" class="price-value">$100</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Employee Section (nur für Mitarbeiter sichtbar) -->
+            <div id="employee-section" class="employee-section" style="display: none;">
+                <h3>👨‍✈️ PILOT STATUS</h3>
+                <div id="current-pickup" class="current-pickup" style="display: none;">
+                    <div class="pickup-header">
+                        <span class="pickup-icon">🎯</span>
+                        <span>AKTIVER AUFTRAG</span>
+                    </div>
+                    <div class="pickup-details">
+                        <p><strong>Kunde:</strong> <span id="pickupPlayerName">-</span></p>
+                        <p><strong>Entfernung:</strong> <span id="pickupDistance">-</span></p>
+                    </div>
+                    <div class="pickup-actions">
+                        <button class="phone-action-btn success" onclick="acceptPickup()">ANNEHMEN</button>
+                        <button class="phone-action-btn danger" onclick="cancelPickup()">ABLEHNEN</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="phone-script.js"></script>
+</body>
+</html>
