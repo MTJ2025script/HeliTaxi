@@ -70,14 +70,11 @@ function ShowDestinationMenu()
         })
     end
     
-    -- For simplicity, use native notification instead of ESX menu
-    SendNUIMessage({
-        type = "showDestinations",
-        destinations = Config.TaxiLocations
-    })
+    -- Simple notification showing available destinations
+    ShowNotification("Helicopter Taxi called. Flying to first available destination.")
     
-    -- Simplified selection - auto-select first destination for testing
-    -- In production, you'd want a proper menu system
+    -- Auto-select first destination for standalone use
+    -- In production, integrate with your menu system (ESX, QB, etc.)
     SelectDestination(1)
 end
 
@@ -98,20 +95,40 @@ function SpawnHeliTaxi()
     local modelHash = GetHashKey(Config.HeliSpawn.model)
     
     RequestModel(modelHash)
-    while not HasModelLoaded(modelHash) do
+    local timeout = 0
+    while not HasModelLoaded(modelHash) and timeout < 100 do
         Citizen.Wait(100)
+        timeout = timeout + 1
     end
     
-    -- Spawn helicopter
-    currentHeli = CreateVehicle(modelHash, Config.HeliSpawn.coords.x, Config.HeliSpawn.coords.y, Config.HeliSpawn.coords.z, Config.HeliSpawn.heading, true, false)
+    if not HasModelLoaded(modelHash) then
+        ShowNotification("Error: Could not load helicopter model")
+        heliTaxiActive = false
+        return
+    end
+    
+    -- Spawn helicopter (client-side only for standalone)
+    currentHeli = CreateVehicle(modelHash, Config.HeliSpawn.coords.x, Config.HeliSpawn.coords.y, Config.HeliSpawn.coords.z, Config.HeliSpawn.heading, false, false)
     SetVehicleEngineOn(currentHeli, true, true, false)
     SetVehicleNumberPlateText(currentHeli, "TAXI")
     
-    -- Spawn NPC driver
+    -- Mark model as no longer needed to free memory
+    SetModelAsNoLongerNeeded(modelHash)
+    
+    -- Spawn NPC driver (26 = CIVMALE ped type)
     local driverModel = GetHashKey("s_m_m_pilot_01")
     RequestModel(driverModel)
-    while not HasModelLoaded(driverModel) do
+    timeout = 0
+    while not HasModelLoaded(driverModel) and timeout < 100 do
         Citizen.Wait(100)
+        timeout = timeout + 1
+    end
+    
+    if not HasModelLoaded(driverModel) then
+        ShowNotification("Error: Could not load pilot model")
+        DeleteVehicle(currentHeli)
+        heliTaxiActive = false
+        return
     end
     
     currentDriver = CreatePedInsideVehicle(currentHeli, 26, driverModel, -1, true, false)
@@ -119,12 +136,23 @@ function SpawnHeliTaxi()
     SetPedFleeAttributes(currentDriver, 0, false)
     SetPedCombatAttributes(currentDriver, 17, true)
     
+    -- Mark model as no longer needed to free memory
+    SetModelAsNoLongerNeeded(driverModel)
+    
     ShowNotification("Helicopter is ready. Get in!")
     
-    -- Wait for player to enter
+    -- Wait for player to enter (with 60 second timeout)
+    local startTime = GetGameTimer()
     Citizen.CreateThread(function()
         while heliTaxiActive do
             Citizen.Wait(100)
+            
+            -- Check timeout (60 seconds)
+            if GetGameTimer() - startTime > 60000 then
+                ShowNotification("Taxi call timed out")
+                CleanupTaxi()
+                break
+            end
             
             local playerPed = PlayerPedId()
             
@@ -146,6 +174,8 @@ function StartTaxiRoute()
     ShowNotification("Flying to: " .. currentDestination.name)
     
     -- Make NPC driver fly to destination
+    -- TaskHeliMission parameters: ped, vehicle, targetVehicle, targetPed, posX, posY, posZ,
+    -- mode(4=land), speed, radius, targetHeading, maxHeight, minHeight, slowDownDistance, flags
     TaskHeliMission(currentDriver, currentHeli, 0, 0, 
         currentDestination.coords.x, currentDestination.coords.y, currentDestination.coords.z, 
         4, 30.0, 10.0, -1.0, 0, 10, -1.0, 0)
@@ -159,8 +189,8 @@ function StartTaxiRoute()
                 local heliCoords = GetEntityCoords(currentHeli)
                 local distance = #(heliCoords - currentDestination.coords)
                 
-                -- Check if arrived (within 50 meters)
-                if distance < 50.0 then
+                -- Check if arrived (within 20 meters and on ground)
+                if distance < 20.0 and IsVehicleOnAllWheels(currentHeli) then
                     ShowNotification("Arrived at destination: " .. currentDestination.name)
                     Citizen.Wait(5000)
                     CleanupTaxi()
@@ -178,11 +208,11 @@ function CleanupTaxi()
     heliTaxiActive = false
     
     if currentDriver and DoesEntityExist(currentDriver) then
-        DeleteEntity(currentDriver)
+        DeletePed(currentDriver)
     end
     
     if currentHeli and DoesEntityExist(currentHeli) then
-        DeleteEntity(currentHeli)
+        DeleteVehicle(currentHeli)
     end
     
     currentDriver = nil
