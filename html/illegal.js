@@ -94,6 +94,9 @@ function openIllegalBossMenu(data) {
     // Update schwarze Kasse
     $('#blackCash').text(formatMoney(data.blackCash || 0));
     
+    // Update army vehicle count
+    $('#armyVehicleCount').text(data.armyVehicleCount || 0);
+    
     // Hide all menus
     $('.illegal-container').hide();
     
@@ -117,21 +120,39 @@ function openIllegalShop(vehicles) {
     // Hide all menus
     $('.illegal-container').hide();
     
+    // Update shop balance (use blackCash from illegalData)
+    $('#shopBalance').text(formatMoney(illegalData.blackCash || 0));
+    
     // Clear vehicle list
     $('#illegal-vehicle-list').empty();
     
     // Add vehicles
     if (vehicles && vehicles.length > 0) {
         vehicles.forEach(function(vehicle) {
+            // Determine category badge
+            const categoryLabel = vehicle.category === 'transport' ? 'TRANSPORT' : 
+                                vehicle.category === 'attack' ? 'ATTACK' : 
+                                'MILITARY';
+            
+            // Build stats display
+            const stats = [];
+            if (vehicle.passengers) stats.push(`👥 ${vehicle.passengers} Sitze`);
+            if (vehicle.speed) stats.push(`⚡ Speed: ${vehicle.speed}`);
+            if (vehicle.armed) stats.push(`🎯 Bewaffnet`);
+            if (vehicle.heavyLift) stats.push(`💪 Heavy Lift`);
+            
             const vehicleHtml = `
-                <div class="vehicle-name">${vehicle.name}</div>
+                <div class="vehicle-name">${vehicle.name || vehicle.label}</div>
+                <div class="vehicle-category">${categoryLabel}</div>
                 <div class="vehicle-price">$${formatMoney(vehicle.price)}</div>
                 <div class="vehicle-stats">
-                    ⚡ Speed: ${vehicle.speed || 'N/A'} | 
-                    🔧 Handling: ${vehicle.handling || 'N/A'}
+                    ${stats.join(' | ')}
                 </div>
             `;
-            const vehicleCard = $('<div>').addClass('vehicle-card').html(vehicleHtml);
+            const vehicleCard = $('<div>')
+                .addClass('vehicle-card')
+                .attr('data-category', vehicle.category || 'all')
+                .html(vehicleHtml);
             
             vehicleCard.click(function() {
                 buyIllegalVehicle(vehicle);
@@ -140,7 +161,7 @@ function openIllegalShop(vehicles) {
             $('#illegal-vehicle-list').append(vehicleCard);
         });
     } else {
-        $('#illegal-vehicle-list').html('<div style="color: #999; text-align: center; padding: 40px;">Keine Fahrzeuge verfügbar</div>');
+        $('#illegal-vehicle-list').html('<div style="color: #999; text-align: center; padding: 40px; grid-column: 1 / -1;">Keine Fahrzeuge verfügbar</div>');
     }
     
     // Show Shop
@@ -175,22 +196,35 @@ function openIllegalGarage(vehicles, helipadIndex) {
     // Set helipad name
     $('#helipadName').text('HELIPAD ' + (helipadIndex || 1));
     
+    // Update vehicle count
+    $('#vehicleCount').text(vehicles ? vehicles.length : 0);
+    
     // Clear vehicle list
     $('#illegal-garage-vehicles').empty();
     
     // Add vehicles
     if (vehicles && vehicles.length > 0) {
         vehicles.forEach(function(vehicle) {
+            // Calculate fuel percentage for display
+            const fuelPercent = vehicle.fuel || 100;
+            const fuelColor = fuelPercent > 50 ? '#00ff00' : fuelPercent > 25 ? '#ffaa00' : '#ff0000';
+            
             const vehicleItemHtml = `
                 <div class="vehicle-info">
-                    <div class="name">${vehicle.model}</div>
-                    <div class="plate">${vehicle.plate || 'N/A'}</div>
+                    <div class="name">${vehicle.model || vehicle.label}</div>
+                    <div class="plate">🔖 ${vehicle.plate || 'N/A'}</div>
+                    <div class="fuel-bar">
+                        <div class="fuel-bar-bg">
+                            <div class="fuel-bar-fill" style="width: ${fuelPercent}%; background: ${fuelColor};"></div>
+                        </div>
+                        <span class="fuel-text">⛽ ${Math.round(fuelPercent)}%</span>
+                    </div>
                 </div>
-                <button class="illegal-btn" style="padding: 8px 15px; font-size: 14px;">SPAWN</button>
+                <button class="spawn-btn">SPAWNEN</button>
             `;
             const vehicleItem = $('<div>').addClass('vehicle-item').html(vehicleItemHtml);
             
-            vehicleItem.find('.illegal-btn').click(function() {
+            vehicleItem.find('.spawn-btn').click(function() {
                 spawnIllegalVehicleById(vehicle.id);
             });
             
@@ -342,4 +376,38 @@ function closeIllegalMenu() {
 
 function formatMoney(amount) {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CATEGORY FILTER FOR SHOP
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function filterShopCategory(category) {
+    console.log('[ILLEGAL-UI] Filtering shop by category:', category);
+    
+    // Update active button
+    $('.category-btn').removeClass('active');
+    $(`.category-btn:contains('${category === 'all' ? 'ALLE' : category.toUpperCase()}')`).addClass('active');
+    
+    // Filter vehicles
+    if (category === 'all') {
+        $('.vehicle-card').show();
+    } else {
+        $('.vehicle-card').hide();
+        $(`.vehicle-card[data-category="${category}"]`).show();
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GARAGE REFRESH
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function refreshGarage() {
+    console.log('[ILLEGAL-UI] Refreshing garage inventory');
+    
+    // Close current menu
+    closeIllegalMenu();
+    
+    // Request fresh data from server
+    $.post('https://Heli-Taxi/requestIllegalGarageFromMenu', JSON.stringify({}));
 }

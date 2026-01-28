@@ -18,23 +18,43 @@
         </div>
         
         <div class="illegal-content">
-            <div class="black-cash-display">
-                <div class="cash-label">SCHWARZE KASSE</div>
-                <div class="cash-amount">$<span id="blackCash">0</span></div>
+            <!-- Schwarze Kasse & Stats Overview -->
+            <div class="illegal-stats-grid">
+                <div class="black-cash-display">
+                    <div class="cash-label">SCHWARZE KASSE</div>
+                    <div class="cash-amount">$<span id="blackCash">0</span></div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">ARMY VEHICLES</div>
+                    <div class="stat-value" id="armyVehicleCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">HELIPADS</div>
+                    <div class="stat-value">3</div>
+                </div>
             </div>
             
+            <!-- Quick Actions Grid -->
             <div class="illegal-actions">
                 <button class="illegal-btn" onclick="openIllegalShopFromMenu()">
-                    ARMY VEHICLES
+                    <span class="btn-icon">🎖️</span>
+                    <span class="btn-label">ARMY VEHICLES</span>
+                    <span class="btn-desc">Kaufe Military Helikopter</span>
                 </button>
                 <button class="illegal-btn" onclick="openIllegalGarageFromMenu()">
-                    ILLEGAL GARAGE
+                    <span class="btn-icon">🚁</span>
+                    <span class="btn-label">ILLEGAL GARAGE</span>
+                    <span class="btn-desc">Bestand & Fahrzeuge verwalten</span>
                 </button>
                 <button class="illegal-btn" onclick="manageIllegalOperations()">
-                    OPERATIONS
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-label">OPERATIONS</span>
+                    <span class="btn-desc">Aktivitäten & Missionen</span>
                 </button>
                 <button class="illegal-btn" onclick="viewIllegalTransactions()">
-                    TRANSAKTIONEN
+                    <span class="btn-icon">💸</span>
+                    <span class="btn-label">TRANSAKTIONEN</span>
+                    <span class="btn-desc">Finanzhistorie einsehen</span>
                 </button>
             </div>
         </div>
@@ -48,10 +68,25 @@
         </div>
         
         <div class="illegal-content">
-            <div class="shop-warning">
-                MILITARY GRADE VEHICLES - HOHE HEAT
+            <!-- Shop Balance Display -->
+            <div class="shop-balance-bar">
+                <div class="balance-info">
+                    <span class="balance-label">VERFÜGBAR:</span>
+                    <span class="balance-amount">$<span id="shopBalance">0</span></span>
+                </div>
+                <div class="shop-warning">
+                    ⚠️ MILITARY GRADE VEHICLES - HOHE HEAT
+                </div>
             </div>
             
+            <!-- Category Tabs -->
+            <div class="shop-categories">
+                <button class="category-btn active" onclick="filterShopCategory('all')">ALLE</button>
+                <button class="category-btn" onclick="filterShopCategory('transport')">TRANSPORT</button>
+                <button class="category-btn" onclick="filterShopCategory('attack')">ATTACK</button>
+            </div>
+            
+            <!-- Vehicle Grid -->
             <div id="illegal-vehicle-list" class="vehicle-grid">
                 <!-- Wird dynamisch gefüllt -->
             </div>
@@ -66,17 +101,33 @@
         </div>
         
         <div class="illegal-content">
+            <!-- Garage Info Header -->
             <div class="garage-info">
-                <div class="helipad-name" id="helipadName">HELIPAD 1</div>
+                <div class="helipad-info-card">
+                    <div class="helipad-name" id="helipadName">HELIPAD 1</div>
+                    <div class="helipad-status">
+                        <span class="status-label">BESTAND:</span>
+                        <span class="status-value" id="vehicleCount">0</span> Fahrzeuge
+                    </div>
+                </div>
             </div>
             
+            <!-- Vehicle Inventory List -->
+            <div class="garage-section-label">FAHRZEUG-BESTAND</div>
             <div id="illegal-garage-vehicles" class="vehicle-list">
                 <!-- Wird dynamisch gefüllt -->
             </div>
             
+            <!-- Garage Actions -->
             <div class="garage-actions">
-                <button class="illegal-btn" onclick="spawnIllegalVehicle()">SPAWN VEHICLE</button>
-                <button class="illegal-btn" onclick="storeIllegalVehicle()">STORE VEHICLE</button>
+                <button class="illegal-btn secondary" onclick="storeIllegalVehicle()">
+                    <span class="btn-icon">📦</span>
+                    FAHRZEUG EINPARKEN
+                </button>
+                <button class="illegal-btn secondary" onclick="refreshGarage()">
+                    <span class="btn-icon">🔄</span>
+                    BESTAND AKTUALISIEREN
+                </button>
             </div>
         </div>
     </div>
