@@ -97,6 +97,11 @@ function openIllegalBossMenu(data) {
     // Update army vehicle count
     $('#armyVehicleCount').text(data.armyVehicleCount || 0);
     
+    // Update helipad count (if provided)
+    if (data.helipadCount !== undefined) {
+        $('#helipadCount').text(data.helipadCount);
+    }
+    
     // Hide all menus
     $('.illegal-container').hide();
     
@@ -134,6 +139,9 @@ function openIllegalShop(vehicles) {
                                 vehicle.category === 'attack' ? 'ATTACK' : 
                                 'MILITARY';
             
+            // Use consistent vehicle name property
+            const vehicleName = vehicle.label || vehicle.name || 'Unknown Vehicle';
+            
             // Build stats display
             const stats = [];
             if (vehicle.passengers) stats.push(`👥 ${vehicle.passengers} Sitze`);
@@ -142,7 +150,7 @@ function openIllegalShop(vehicles) {
             if (vehicle.heavyLift) stats.push(`💪 Heavy Lift`);
             
             const vehicleHtml = `
-                <div class="vehicle-name">${vehicle.name || vehicle.label}</div>
+                <div class="vehicle-name">${vehicleName}</div>
                 <div class="vehicle-category">${categoryLabel}</div>
                 <div class="vehicle-price">$${formatMoney(vehicle.price)}</div>
                 <div class="vehicle-stats">
@@ -161,7 +169,7 @@ function openIllegalShop(vehicles) {
             $('#illegal-vehicle-list').append(vehicleCard);
         });
     } else {
-        $('#illegal-vehicle-list').html('<div style="color: #999; text-align: center; padding: 40px; grid-column: 1 / -1;">Keine Fahrzeuge verfügbar</div>');
+        $('#illegal-vehicle-list').html('<div class="no-vehicles" style="grid-column: 1 / -1;">Keine Fahrzeuge verfügbar</div>');
     }
     
     // Show Shop
@@ -205,13 +213,18 @@ function openIllegalGarage(vehicles, helipadIndex) {
     // Add vehicles
     if (vehicles && vehicles.length > 0) {
         vehicles.forEach(function(vehicle) {
-            // Calculate fuel percentage for display
-            const fuelPercent = vehicle.fuel || 100;
+            // Calculate fuel percentage for display with validation
+            let fuelPercent = vehicle.fuel !== undefined ? vehicle.fuel : 100;
+            // Clamp value between 0 and 100
+            fuelPercent = Math.max(0, Math.min(100, fuelPercent));
             const fuelColor = fuelPercent > 50 ? '#00ff00' : fuelPercent > 25 ? '#ffaa00' : '#ff0000';
+            
+            // Use consistent vehicle name property
+            const vehicleName = vehicle.label || vehicle.model || 'Unknown';
             
             const vehicleItemHtml = `
                 <div class="vehicle-info">
-                    <div class="name">${vehicle.model || vehicle.label}</div>
+                    <div class="name">${vehicleName}</div>
                     <div class="plate">🔖 ${vehicle.plate || 'N/A'}</div>
                     <div class="fuel-bar">
                         <div class="fuel-bar-bg">
@@ -231,7 +244,7 @@ function openIllegalGarage(vehicles, helipadIndex) {
             $('#illegal-garage-vehicles').append(vehicleItem);
         });
     } else {
-        $('#illegal-garage-vehicles').html('<div style="color: #999; text-align: center; padding: 40px;">Keine Fahrzeuge geparkt</div>');
+        $('#illegal-garage-vehicles').html('<div class="no-vehicles">Keine Fahrzeuge geparkt</div>');
     }
     
     // Show Garage
@@ -385,9 +398,9 @@ function formatMoney(amount) {
 function filterShopCategory(category) {
     console.log('[ILLEGAL-UI] Filtering shop by category:', category);
     
-    // Update active button
+    // Update active button using data attribute
     $('.category-btn').removeClass('active');
-    $(`.category-btn:contains('${category === 'all' ? 'ALLE' : category.toUpperCase()}')`).addClass('active');
+    $(`.category-btn[data-category="${category}"]`).addClass('active');
     
     // Filter vehicles
     if (category === 'all') {

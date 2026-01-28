@@ -295,7 +295,7 @@ body.illegal-active .illegal-bg-overlay {
     background: rgba(0, 0, 0, 0.8);
     border: none;
     padding: 25px;
-    transition: all 0.2s;
+    transition: all 0.2s, transform 0.2s;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -339,6 +339,14 @@ body.illegal-active .illegal-bg-overlay {
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-top: 8px;
+}
+
+/* No vehicles message */
+.no-vehicles {
+    color: #999;
+    text-align: center;
+    padding: 40px;
+    grid-column: 1 / -1;
 }
 
 /* VEHICLE LIST (Garage) */
