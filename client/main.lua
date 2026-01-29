@@ -6,6 +6,22 @@ local employeeData = nil
 -- NPC Storage
 local spawnedNPCs = {}
 
+-- Load Maze Bank Tower Interior (for office locations)
+CreateThread(function()
+    -- Request the Maze Bank Tower IPL
+    RequestIpl("ex_dt1_02_office_02b")  -- Executive Office
+    
+    -- Get the interior ID
+    local interiorId = GetInteriorAtCoords(-75.8466, -826.9893, 243.3859)
+    
+    if interiorId ~= 0 then
+        -- Enable all interior props
+        EnableInteriorProp(interiorId, "office_chairs")
+        RefreshInterior(interiorId)
+        print("[Heli-Taxi] Maze Bank Tower interior loaded")
+    end
+end)
+
 -- Create Blips
 CreateThread(function()
     if not Config.ShowBlips then return end
@@ -36,15 +52,9 @@ CreateThread(function()
             Wait(1)
         end
         
-        -- Get ground Z coordinate with offset to prevent floating
-        local groundZ = Config.Locations.DutyToggle.z
-        local found, zCoord = GetGroundZFor_3dCoord(Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z + 5.0, false)
-        if found then
-            groundZ = zCoord + 1.0  -- +1.0 offset so NPC stands ON ground
-        end
-        
-        local npc = CreatePed(4, model, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, groundZ, Config.Locations.DutyToggle.w, false, true)
-        SetEntityCoordsNoOffset(npc, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, groundZ, false, false, false)
+        -- Use exact Z coordinate from config (works for both interior and exterior)
+        local npc = CreatePed(4, model, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z, Config.Locations.DutyToggle.w, false, true)
+        SetEntityCoordsNoOffset(npc, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z, false, false, false)
         SetEntityHeading(npc, Config.Locations.DutyToggle.w)
         FreezeEntityPosition(npc, true)
         SetEntityInvincible(npc, true)
@@ -65,15 +75,9 @@ CreateThread(function()
             Wait(1)
         end
         
-        -- Get ground Z coordinate with offset to prevent floating
-        local groundZ = Config.Locations.VehicleManagement.z
-        local found, zCoord = GetGroundZFor_3dCoord(Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z + 5.0, false)
-        if found then
-            groundZ = zCoord + 1.0  -- +1.0 offset so NPC stands ON ground
-        end
-        
-        local npc = CreatePed(4, model, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, groundZ, Config.Locations.VehicleManagement.w, false, true)
-        SetEntityCoordsNoOffset(npc, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, groundZ, false, false, false)
+        -- Use exact Z coordinate from config (works for both interior and exterior)
+        local npc = CreatePed(4, model, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z, Config.Locations.VehicleManagement.w, false, true)
+        SetEntityCoordsNoOffset(npc, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z, false, false, false)
         SetEntityHeading(npc, Config.Locations.VehicleManagement.w)
         FreezeEntityPosition(npc, true)
         SetEntityInvincible(npc, true)
