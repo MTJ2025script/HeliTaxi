@@ -226,9 +226,156 @@ function ShowNotification(text)
     DrawNotification(false, false)
 end
 
+-- Boss Menu System
+local bossMenuOpen = false
+
+-- Check if player has boss permissions (can be customized for ESX/QB)
+function HasBossPermission()
+    -- For standalone, allow everyone to access
+    -- In production, integrate with your framework's permission system
+    return true
+    
+    -- Example ESX integration (commented out):
+    --[[
+    if ESX then
+        local playerData = ESX.GetPlayerData()
+        if playerData.job and playerData.job.name == 'helitaxi' then
+            return playerData.job.grade >= 3 -- Manager rank or above
+        end
+    end
+    return false
+    ]]--
+end
+
+-- Open boss menu
+function OpenBossMenu()
+    if bossMenuOpen then return end
+    
+    local hasPermission = HasBossPermission()
+    
+    if not hasPermission then
+        ShowNotification("Access Denied: Manager rank or above required")
+    end
+    
+    bossMenuOpen = true
+    
+    -- Gather data for the menu
+    local menuData = {
+        hasPermission = hasPermission,
+        stats = {
+            flights = 0,
+            helicopters = 1,
+            revenue = 0,
+            employees = 1
+        },
+        fleet = {
+            {name = "Helicopter Alpha", status = "available", location = "Vespucci Helipad"}
+        },
+        employees = {},
+        finances = {
+            today = 0,
+            week = 0,
+            month = 0
+        }
+    }
+    
+    -- Send to NUI
+    SendNUIMessage({
+        action = "openBossMenu",
+        data = menuData
+    })
+    
+    SetNuiFocus(true, true)
+end
+
+-- NUI Callbacks
+RegisterNUICallback('close', function(data, cb)
+    CloseBossMenu()
+    cb('ok')
+end)
+
+RegisterNUICallback('setFocus', function(data, cb)
+    SetNuiFocus(data.focus, data.cursor)
+    cb('ok')
+end)
+
+-- Close boss menu
+function CloseBossMenu()
+    bossMenuOpen = false
+    SendNUIMessage({
+        action = "close"
+    })
+    SetNuiFocus(false, false)
+end
+
+-- Boss menu marker and interaction
+Citizen.CreateThread(function()
+    -- Boss menu location (near spawn point)
+    local bossMenuCoords = vector3(Config.HeliSpawn.coords.x + 10.0, Config.HeliSpawn.coords.y, Config.HeliSpawn.coords.z)
+    
+    -- Create blip for boss menu
+    local blip = AddBlipForCoord(bossMenuCoords.x, bossMenuCoords.y, bossMenuCoords.z)
+    SetBlipSprite(blip, 521) -- Office/briefcase icon
+    SetBlipDisplay(blip, 4)
+    SetBlipScale(blip, 0.7)
+    SetBlipColour(blip, 3) -- Blue color
+    SetBlipAsShortRange(blip, true)
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentString("HeliTaxi Management")
+    EndTextCommandSetBlipName(blip)
+    
+    while true do
+        local sleep = 500
+        local playerPed = PlayerPedId()
+        local playerCoords = GetEntityCoords(playerPed)
+        
+        local distance = #(playerCoords - bossMenuCoords)
+        
+        if distance < 50.0 then
+            sleep = 0
+            -- Draw marker for boss menu
+            DrawMarker(27, bossMenuCoords.x, bossMenuCoords.y, bossMenuCoords.z - 1.0, 
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                1.5, 1.5, 1.5, 
+                50, 150, 255, 100, 
+                false, true, 2, false, nil, nil, false)
+            
+            if distance < 2.0 and not bossMenuOpen then
+                ShowHelpText("Press ~INPUT_CONTEXT~ to open Management Menu")
+                
+                if IsControlJustReleased(0, 38) then -- E key
+                    OpenBossMenu()
+                end
+            end
+        end
+        
+        Citizen.Wait(sleep)
+    end
+end)
+
+-- Handle "illegal" boss menu calls from external sources
+RegisterNetEvent('helitaxi:openIllegalBossMenu')
+AddEventHandler('helitaxi:openIllegalBossMenu', function()
+    -- Convert illegal boss menu request to legal management menu
+    OpenBossMenu()
+end)
+
+RegisterNetEvent('helitaxi:openBossMenu')
+AddEventHandler('helitaxi:openBossMenu', function()
+    OpenBossMenu()
+end)
+
+-- Command to open boss menu
+RegisterCommand('helitaximenu', function()
+    OpenBossMenu()
+end, false)
+
 -- Cleanup on resource stop
 AddEventHandler('onResourceStop', function(resourceName)
     if GetCurrentResourceName() == resourceName then
         CleanupTaxi()
+        if bossMenuOpen then
+            CloseBossMenu()
+        end
     end
 end)
