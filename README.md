@@ -61,10 +61,17 @@ Edit `config.lua` to customize:
 - ✅ Removed all illegal markers and interactions
 - ✅ Script runs cleanly without errors
 - ✅ Proper cleanup of entities
-- ✅ Fixed black UI screen issue
-- ✅ Fixed "no access" permission errors
+- ✅ Fixed black UI screen issue - proper blue gradient interface
+- ✅ Fixed "no access" permission errors - configurable permission system
 - ✅ Properly handles "illegal" boss menu calls (converts to legal menu)
-- ✅ Rank system properly integrated
+- ✅ Permission system ready for framework integration (ESX/QB)
+
+## Configuration Notes
+**Permission System:**
+- By default, permission checking is disabled (`Config.BossMenuPermission.enabled = false`)
+- Anyone can access the boss menu in standalone mode
+- To enable rank checking, set `enabled = true` in config.lua and uncomment framework integration in client.lua and server.lua
+- Configure minimum grade and job name in config.lua
 
 ## License
 Free to use and modify

@@ -22,6 +22,29 @@ Config.Prices = {
     perMeter = 0.5
 }
 
+-- Boss menu location (configurable)
+Config.BossMenu = {
+    coords = vector3(-735.45, -1468.52, 5.0),  -- Near but separate from spawn point
+    marker = {
+        type = 27,
+        size = {x = 1.5, y = 1.5, z = 1.5},
+        color = {r = 50, g = 150, b = 255, a = 100}
+    },
+    blip = {
+        sprite = 521,
+        color = 3,
+        scale = 0.7,
+        name = "HeliTaxi Management"
+    }
+}
+
+-- Permission settings
+Config.BossMenuPermission = {
+    enabled = false,  -- Set to true to enable permission checking
+    minGrade = 3,     -- Minimum job grade required (if using ESX/QB)
+    jobName = 'helitaxi'  -- Required job name (if using ESX/QB)
+}
+
 -- Colors and UI
 Config.MarkerColor = {r = 50, g = 200, b = 50, a = 100}  -- Green for legal markers
 Config.BlipColor = 2  -- Green blip

@@ -52,17 +52,37 @@ AddEventHandler('helitaxi:requestBossMenuData', function()
     -- Check permissions (integrate with your framework)
     local hasPermission = true
     
+    -- Optional ESX integration:
     --[[
     if ESX then
         local xPlayer = ESX.GetPlayerFromId(source)
         if xPlayer then
             local job = xPlayer.getJob()
-            hasPermission = job.name == 'helitaxi' and job.grade >= 3
+            hasPermission = job.name == Config.BossMenuPermission.jobName and job.grade >= Config.BossMenuPermission.minGrade
         else
             hasPermission = false
         end
     end
     ]]--
+    
+    -- Count actual HeliTaxi employees (if using framework)
+    local employeeCount = 0
+    --[[
+    if ESX then
+        local players = ESX.GetPlayers()
+        for _, playerId in ipairs(players) do
+            local xPlayer = ESX.GetPlayerFromId(playerId)
+            if xPlayer and xPlayer.getJob().name == Config.BossMenuPermission.jobName then
+                employeeCount = employeeCount + 1
+            end
+        end
+    end
+    ]]--
+    
+    -- For standalone, show total players or 0
+    if employeeCount == 0 then
+        employeeCount = 1  -- At least the person opening the menu
+    end
     
     -- Gather data
     local data = {
@@ -71,7 +91,7 @@ AddEventHandler('helitaxi:requestBossMenuData', function()
             flights = 0,
             helicopters = 1,
             revenue = 0,
-            employees = GetNumPlayerIndices()
+            employees = employeeCount
         },
         fleet = {
             {name = "Helicopter Alpha", status = "available", location = "Vespucci Helipad"}

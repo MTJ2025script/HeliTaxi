@@ -231,20 +231,24 @@ local bossMenuOpen = false
 
 -- Check if player has boss permissions (can be customized for ESX/QB)
 function HasBossPermission()
-    -- For standalone, allow everyone to access
-    -- In production, integrate with your framework's permission system
-    return true
+    -- Check if permission system is enabled
+    if not Config.BossMenuPermission.enabled then
+        return true  -- If disabled, allow everyone
+    end
     
-    -- Example ESX integration (commented out):
+    -- Framework integration (ESX example):
     --[[
     if ESX then
         local playerData = ESX.GetPlayerData()
-        if playerData.job and playerData.job.name == 'helitaxi' then
-            return playerData.job.grade >= 3 -- Manager rank or above
+        if playerData.job and playerData.job.name == Config.BossMenuPermission.jobName then
+            return playerData.job.grade >= Config.BossMenuPermission.minGrade
         end
     end
     return false
     ]]--
+    
+    -- For standalone mode (permission checking disabled)
+    return true
 end
 
 -- Open boss menu
@@ -255,6 +259,7 @@ function OpenBossMenu()
     
     if not hasPermission then
         ShowNotification("Access Denied: Manager rank or above required")
+        return  -- Don't open menu if no permission
     end
     
     bossMenuOpen = true
@@ -295,7 +300,10 @@ RegisterNUICallback('close', function(data, cb)
 end)
 
 RegisterNUICallback('setFocus', function(data, cb)
-    SetNuiFocus(data.focus, data.cursor)
+    -- Validate data
+    local focus = type(data.focus) == 'boolean' and data.focus or false
+    local cursor = type(data.cursor) == 'boolean' and data.cursor or false
+    SetNuiFocus(focus, cursor)
     cb('ok')
 end)
 
@@ -310,18 +318,18 @@ end
 
 -- Boss menu marker and interaction
 Citizen.CreateThread(function()
-    -- Boss menu location (near spawn point)
-    local bossMenuCoords = vector3(Config.HeliSpawn.coords.x + 10.0, Config.HeliSpawn.coords.y, Config.HeliSpawn.coords.z)
+    -- Get boss menu location from config
+    local bossMenuCoords = Config.BossMenu.coords
     
     -- Create blip for boss menu
     local blip = AddBlipForCoord(bossMenuCoords.x, bossMenuCoords.y, bossMenuCoords.z)
-    SetBlipSprite(blip, 521) -- Office/briefcase icon
+    SetBlipSprite(blip, Config.BossMenu.blip.sprite)
     SetBlipDisplay(blip, 4)
-    SetBlipScale(blip, 0.7)
-    SetBlipColour(blip, 3) -- Blue color
+    SetBlipScale(blip, Config.BossMenu.blip.scale)
+    SetBlipColour(blip, Config.BossMenu.blip.color)
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString("HeliTaxi Management")
+    AddTextComponentString(Config.BossMenu.blip.name)
     EndTextCommandSetBlipName(blip)
     
     while true do
@@ -334,10 +342,11 @@ Citizen.CreateThread(function()
         if distance < 50.0 then
             sleep = 0
             -- Draw marker for boss menu
-            DrawMarker(27, bossMenuCoords.x, bossMenuCoords.y, bossMenuCoords.z - 1.0, 
+            DrawMarker(Config.BossMenu.marker.type, 
+                bossMenuCoords.x, bossMenuCoords.y, bossMenuCoords.z - 1.0, 
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                1.5, 1.5, 1.5, 
-                50, 150, 255, 100, 
+                Config.BossMenu.marker.size.x, Config.BossMenu.marker.size.y, Config.BossMenu.marker.size.z, 
+                Config.BossMenu.marker.color.r, Config.BossMenu.marker.color.g, Config.BossMenu.marker.color.b, Config.BossMenu.marker.color.a, 
                 false, true, 2, false, nil, nil, false)
             
             if distance < 2.0 and not bossMenuOpen then

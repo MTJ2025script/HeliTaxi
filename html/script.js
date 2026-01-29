@@ -6,7 +6,6 @@ const tabContents = document.querySelectorAll('.tab-content');
 const permissionError = document.getElementById('permission-error');
 
 let currentData = null;
-let hasPermission = true;
 
 // Debug logging (matches the format from error logs)
 function log(message) {
@@ -154,14 +153,12 @@ function openBossMenu(data) {
     // Check permissions
     if (data && data.hasPermission === false) {
         log('Permission denied - showing error message');
-        hasPermission = false;
         permissionError.classList.remove('hidden');
         app.classList.remove('hidden');
         document.querySelector('.container').style.display = 'none';
         return;
     }
     
-    hasPermission = true;
     permissionError.classList.add('hidden');
     document.querySelector('.container').style.display = 'flex';
     
