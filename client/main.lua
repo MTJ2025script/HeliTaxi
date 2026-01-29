@@ -24,7 +24,15 @@ end)
 
 -- Create Blips
 CreateThread(function()
-    if not Config.ShowBlips then return end
+    print("[Heli-Taxi] Starting blip creation thread...")
+    print("[Heli-Taxi] Config.ShowBlips = " .. tostring(Config.ShowBlips))
+    
+    if not Config.ShowBlips then 
+        print("[Heli-Taxi] Blips disabled in config")
+        return 
+    end
+    
+    print("[Heli-Taxi] Creating HQ blip at: " .. tostring(Config.Locations.HQ))
     
     -- HQ Blip
     local blip = AddBlipForCoord(Config.Locations.HQ.x, Config.Locations.HQ.y, Config.Locations.HQ.z)
@@ -36,24 +44,35 @@ CreateThread(function()
     BeginTextCommandSetBlipName('STRING')
     AddTextComponentString(Config.CompanyBlip.label)
     EndTextCommandSetBlipName(blip)
+    
+    print("[Heli-Taxi] HQ blip created successfully!")
 end)
 
 -- Spawn NPCs
 CreateThread(function()
+    print("[Heli-Taxi] Starting NPC spawn thread...")
     Wait(1000)
+    
+    print("[Heli-Taxi] Checking DutyToggle location...")
+    print("[Heli-Taxi] DutyToggle = " .. tostring(Config.Locations.DutyToggle))
+    print("[Heli-Taxi] DutyToggle type = " .. type(Config.Locations.DutyToggle))
     
     -- Spawn Duty Toggle NPC (if it's a vector4, it's an NPC location)
     if Config.Locations.DutyToggle and type(Config.Locations.DutyToggle) == 'vector4' then
+        print("[Heli-Taxi] Spawning Duty Toggle NPC...")
         local npcConfig = Config.Locations.DutyNPC or {}
         local model = GetHashKey(npcConfig.model or 'a_f_y_business_02')
         
+        print("[Heli-Taxi] Requesting model: " .. tostring(npcConfig.model or 'a_f_y_business_02'))
         RequestModel(model)
         while not HasModelLoaded(model) do
             Wait(1)
         end
+        print("[Heli-Taxi] Model loaded!")
         
         -- Use exact Z coordinate from config (works for both interior and exterior)
         local npc = CreatePed(4, model, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z, Config.Locations.DutyToggle.w, false, true)
+        print("[Heli-Taxi] Duty NPC created, entity ID: " .. tostring(npc))
         SetEntityCoordsNoOffset(npc, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z, false, false, false)
         SetEntityHeading(npc, Config.Locations.DutyToggle.w)
         FreezeEntityPosition(npc, true)
@@ -63,20 +82,30 @@ CreateThread(function()
         TaskStartScenarioInPlace(npc, npcConfig.scenario or 'WORLD_HUMAN_CLIPBOARD', 0, true)
         
         spawnedNPCs['dutyToggle'] = npc
+        print("[Heli-Taxi] Duty Toggle NPC spawned successfully!")
+    else
+        print("[Heli-Taxi] ERROR: DutyToggle is not a vector4 or is nil!")
     end
+    
+    print("[Heli-Taxi] Checking VehicleManagement location...")
+    print("[Heli-Taxi] VehicleManagement = " .. tostring(Config.Locations.VehicleManagement))
     
     -- Spawn Vehicle Management NPC (if it's a vector4, it's an NPC location)
     if Config.Locations.VehicleManagement and type(Config.Locations.VehicleManagement) == 'vector4' then
+        print("[Heli-Taxi] Spawning Vehicle Management NPC...")
         local npcConfig = Config.Locations.VehicleManagementNPC or {}
         local model = GetHashKey(npcConfig.model or 's_m_m_pilot_02')
         
+        print("[Heli-Taxi] Requesting model: " .. tostring(npcConfig.model or 's_m_m_pilot_02'))
         RequestModel(model)
         while not HasModelLoaded(model) do
             Wait(1)
         end
+        print("[Heli-Taxi] Model loaded!")
         
         -- Use exact Z coordinate from config (works for both interior and exterior)
         local npc = CreatePed(4, model, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z, Config.Locations.VehicleManagement.w, false, true)
+        print("[Heli-Taxi] Vehicle Management NPC created, entity ID: " .. tostring(npc))
         SetEntityCoordsNoOffset(npc, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z, false, false, false)
         SetEntityHeading(npc, Config.Locations.VehicleManagement.w)
         FreezeEntityPosition(npc, true)
@@ -86,7 +115,12 @@ CreateThread(function()
         TaskStartScenarioInPlace(npc, npcConfig.scenario or 'WORLD_HUMAN_CLIPBOARD', 0, true)
         
         spawnedNPCs['vehicleManagement'] = npc
+        print("[Heli-Taxi] Vehicle Management NPC spawned successfully!")
+    else
+        print("[Heli-Taxi] ERROR: VehicleManagement is not a vector4 or is nil!")
     end
+    
+    print("[Heli-Taxi] NPC spawn thread completed!")
 end)
 
 -- Cleanup NPCs on resource stop
