@@ -253,7 +253,7 @@ CreateThread(function()
         local currentHelpText = nil
         
         -- Boss Menu Marker
-        local bossMenuDist = #(playerCoords - Config.Locations.BossMenu)
+        local bossMenuDist = #(playerCoords - vec3(Config.Locations.BossMenu.x, Config.Locations.BossMenu.y, Config.Locations.BossMenu.z))
         if bossMenuDist < Config.DrawDistance then
             sleep = 0
             DrawMarker(
@@ -285,7 +285,7 @@ CreateThread(function()
         
         -- Wardrobe Marker - FIX: Allow Boss to access even without employee check
         if Config.Locations.Wardrobe and (isEmployee or IsBoss()) then
-            local wardrobeDist = #(playerCoords - Config.Locations.Wardrobe)
+            local wardrobeDist = #(playerCoords - vec3(Config.Locations.Wardrobe.x, Config.Locations.Wardrobe.y, Config.Locations.Wardrobe.z))
             if wardrobeDist < Config.DrawDistance then
                 sleep = 0
                 DrawMarker(
@@ -320,10 +320,10 @@ CreateThread(function()
         if Config.Locations.DutyToggle and type(Config.Locations.DutyToggle) == 'vector4' then
             local dutyCoords = vec3(Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z)
             local dutyDist = #(playerCoords - dutyCoords)
-            if vmDist < Config.DrawDistance then
+            if dutyDist < Config.DrawDistance then
                 sleep = 0
                 
-                if vmDist < (Config.Locations.DutyNPC and Config.Locations.DutyNPC.interactDistance or 2.5) then
+                if dutyDist < (Config.Locations.DutyNPC and Config.Locations.DutyNPC.interactDistance or 2.5) then
                     currentHelpText = 'duty_toggle'
                     if Framework and Framework.ShowHelpNotification then
                         Framework.ShowHelpNotification(_U('toggle_duty'))
@@ -369,7 +369,7 @@ CreateThread(function()
         
         -- Vehicle Shop Marker (Normal) - FIX: Allow Boss to access even without employee check
         if Config.Locations.VehicleShop and (isEmployee or IsBoss()) then
-            local shopDist = #(playerCoords - Config.Locations.VehicleShop)
+            local shopDist = #(playerCoords - vec3(Config.Locations.VehicleShop.x, Config.Locations.VehicleShop.y, Config.Locations.VehicleShop.z))
             if shopDist < Config.DrawDistance then
                 sleep = 0
                 DrawMarker(

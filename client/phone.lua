@@ -1,12 +1,67 @@
 -- Heli-Taxi Phone App Client
-local QBCore = exports['qb-core']:GetCoreObject()
+local QBCore = nil
+local ESX = nil
+local Framework = nil
+
+-- Initialize framework
+CreateThread(function()
+    if GetResourceState('qb-core') == 'started' then
+        QBCore = exports['qb-core']:GetCoreObject()
+        Framework = 'qb-core'
+    elseif GetResourceState('es_extended') == 'started' then
+        ESX = exports['es_extended']:getSharedObject()
+        Framework = 'esx'
+    else
+        Framework = 'standalone'
+    end
+end)
+
 local lastCallTime = 0
 local callCooldown = 60000 -- 60 seconds cooldown
 local currentDestination = nil
 
+-- Helper function to show notification
+local function ShowNotification(message, type, duration)
+    if Framework == 'qb-core' and QBCore then
+        QBCore.Functions.Notify(message, type, duration)
+    elseif Framework == 'esx' and ESX then
+        ESX.ShowNotification(message)
+    else
+        -- Fallback to simple notification
+        SetNotificationTextEntry('STRING')
+        AddTextComponentString(message)
+        DrawNotification(false, true)
+    end
+end
+
+-- Helper function to trigger callback
+local function TriggerCallback(callbackName, cb, ...)
+    if Framework == 'qb-core' and QBCore then
+        QBCore.Functions.TriggerCallback(callbackName, cb, ...)
+    elseif Framework == 'esx' and ESX then
+        ESX.TriggerServerCallback(callbackName, cb, ...)
+    else
+        -- Fallback - just return empty data
+        cb({})
+    end
+end
+
+-- Helper function to get player data
+local function GetPlayerName()
+    if Framework == 'qb-core' and QBCore then
+        local playerData = QBCore.Functions.GetPlayerData()
+        return playerData.charinfo.firstname .. ' ' .. playerData.charinfo.lastname
+    elseif Framework == 'esx' and ESX then
+        local playerData = ESX.GetPlayerData()
+        return playerData.name or 'Unknown'
+    else
+        return 'Unknown'
+    end
+end
+
 -- Register phone app data callback
 RegisterNUICallback('heli-taxi:getAppData', function(data, cb)
-    QBCore.Functions.TriggerCallback('heli-taxi:server:getPhoneAppData', function(appData)
+    TriggerCallback('heli-taxi:server:getPhoneAppData', function(appData)
         -- Add current destination info for employees
         if appData.isEmployee and currentDestination then
             local playerCoords = GetEntityCoords(PlayerPedId())
@@ -29,22 +84,22 @@ RegisterNUICallback('heli-taxi:callTaxi', function(data, cb)
     
     if currentTime - lastCallTime < callCooldown then
         local remainingTime = math.ceil((callCooldown - (currentTime - lastCallTime)) / 1000)
-        QBCore.Functions.Notify('Bitte warten Sie noch ' .. remainingTime .. ' Sekunden', 'error')
+        ShowNotification('Bitte warten Sie noch ' .. remainingTime .. ' Sekunden', 'error')
         cb({ success = false, message = 'Cooldown aktiv' })
         return
     end
     
     local playerPed = PlayerPedId()
     local coords = GetEntityCoords(playerPed)
-    local playerData = QBCore.Functions.GetPlayerData()
+    local playerName = GetPlayerName()
     
     TriggerServerEvent('heli-taxi:server:requestPickup', {
         coords = coords,
-        playerName = playerData.charinfo.firstname .. ' ' .. playerData.charinfo.lastname
+        playerName = playerName
     })
     
     lastCallTime = currentTime
-    QBCore.Functions.Notify('Taxi-Anfrage gesendet! Ein Mitarbeiter wird Sie abholen.', 'success')
+    ShowNotification('Taxi-Anfrage gesendet! Ein Mitarbeiter wird Sie abholen.', 'success', 8000)
     
     cb({ success = true, message = 'Anfrage gesendet' })
 end)
@@ -55,7 +110,7 @@ RegisterNetEvent('heli-taxi:client:receivePickupRequest', function(data)
     currentDestination = data
     
     -- Notify employee
-    QBCore.Functions.Notify('📱 Taxi-Anfrage: ' .. data.playerName .. ' benötigt Abholung!', 'primary', 8000)
+    ShowNotification('📱 Taxi-Anfrage: ' .. data.playerName .. ' benötigt Abholung!', 'primary', 8000)
     
     -- Set GPS waypoint to pickup location
     SetNewWaypoint(data.coords.x, data.coords.y)
@@ -80,7 +135,7 @@ end)
 -- Accept pickup from phone
 RegisterNUICallback('heli-taxi:acceptPickup', function(data, cb)
     if currentDestination then
-        QBCore.Functions.Notify('Auftrag angenommen! GPS-Ziel aktiv.', 'success')
+        ShowNotification('Auftrag angenommen! GPS-Ziel aktiv.', 'success')
         cb({ success = true })
     else
         cb({ success = false, message = 'Kein aktiver Auftrag' })
@@ -91,7 +146,7 @@ end)
 RegisterNUICallback('heli-taxi:cancelPickup', function(data, cb)
     if currentDestination then
         currentDestination = nil
-        QBCore.Functions.Notify('Auftrag abgelehnt.', 'error')
+        ShowNotification('Auftrag abgelehnt.', 'error')
         cb({ success = true })
     else
         cb({ success = false, message = 'Kein aktiver Auftrag' })
