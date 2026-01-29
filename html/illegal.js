@@ -34,6 +34,15 @@ window.addEventListener('message', function(event) {
         case 'openIllegalManagement':
             openIllegalManagement(data.operations);
             break;
+        case 'updateIllegalFleet':
+            displayIllegalFleet(data.vehicles);
+            break;
+        case 'updateIllegalTransactions':
+            displayIllegalTransactions(data.transactions);
+            break;
+        case 'updateIllegalOperations':
+            displayIllegalOperations(data.operations);
+            break;
         case 'closeIllegalMenu':
             closeIllegalMenu();
             break;
@@ -79,6 +88,74 @@ document.addEventListener('keydown', function(event) {
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ILLEGAL TAB SWITCHING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function switchIllegalTab(tabName, element) {
+    console.log('[ILLEGAL-UI] Switching to tab:', tabName);
+    
+    // Update tab buttons
+    $('.illegal-tabs .tab-btn').removeClass('active');
+    if (element) {
+        $(element).addClass('active');
+    }
+    
+    // Update tab content
+    $('#illegal-boss-menu .tab-content').removeClass('active');
+    $('#' + tabName).addClass('active');
+    
+    // Load tab data
+    switch(tabName) {
+        case 'illegal-dashboard':
+            loadIllegalDashboard();
+            break;
+        case 'illegal-fleet':
+            loadIllegalFleet();
+            break;
+        case 'illegal-finances':
+            loadIllegalFinances();
+            break;
+        case 'illegal-operations':
+            loadIllegalOperations();
+            break;
+    }
+}
+
+function loadIllegalDashboard() {
+    console.log('[ILLEGAL-UI] Loading illegal dashboard');
+    // Update dashboard stats from illegalData
+    if (illegalData) {
+        $('#illegalDashboardBalance').text('$' + formatMoney(illegalData.blackCash || 0));
+        $('#illegalArmyVehicles').text(illegalData.armyVehicleCount || 0);
+        $('#illegalOperationsCount').text(illegalData.operationsCount || 0);
+    }
+}
+
+function loadIllegalFleet() {
+    console.log('[ILLEGAL-UI] Loading illegal fleet');
+    // Request fleet data from server
+    $.post('https://Heli-Taxi/getIllegalFleet', JSON.stringify({}));
+}
+
+function loadIllegalFinances() {
+    console.log('[ILLEGAL-UI] Loading illegal finances');
+    // Update finances from illegalData
+    if (illegalData) {
+        $('#illegalFinancesBalance').text('$' + formatMoney(illegalData.blackCash || 0));
+        $('#illegalFinancesIncome').text('$' + formatMoney(illegalData.illegalIncome || 0));
+        $('#illegalHeatLevel').text((illegalData.heatLevel || 0) + '%');
+    }
+    // Request transactions
+    $.post('https://Heli-Taxi/getIllegalTransactions', JSON.stringify({}));
+}
+
+function loadIllegalOperations() {
+    console.log('[ILLEGAL-UI] Loading illegal operations');
+    // Request operations data
+    $.post('https://Heli-Taxi/getIllegalOperations', JSON.stringify({}));
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ILLEGAL BOSS MENU (Tablet NPC)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -91,23 +168,31 @@ function openIllegalBossMenu(data) {
     // Enable illegal background
     enableIllegalBackground();
     
-    // Update schwarze Kasse
-    $('#blackCash').text(formatMoney(data.blackCash || 0));
+    // Update all dashboard stats
+    $('#illegalDashboardBalance').text('$' + formatMoney(data.blackCash || 0));
+    $('#illegalArmyVehicles').text(data.armyVehicleCount || 0);
+    $('#illegalOperationsCount').text(data.operationsCount || 0);
     
-    // Update army vehicle count
-    $('#armyVehicleCount').text(data.armyVehicleCount || 0);
+    // Update finances tab
+    $('#illegalFinancesBalance').text('$' + formatMoney(data.blackCash || 0));
+    $('#illegalFinancesIncome').text('$' + formatMoney(data.illegalIncome || 0));
+    $('#illegalHeatLevel').text((data.heatLevel || 0) + '%');
     
-    // Update helipad count (if provided)
-    if (data.helipadCount !== undefined) {
-        $('#helipadCount').text(data.helipadCount);
-    }
+    // Update operations tab
+    $('#illegalHeatLevelOps').text((data.heatLevel || 0) + '%');
+    $('#illegalOperationsCountOps').text(data.operationsCount || 0);
+    $('#illegalTotalProfit').text(formatMoney(data.totalProfit || 0));
     
-    // Hide all menus
+    // Hide all illegal menus
     $('.illegal-container').hide();
     
-    // Show Boss Menu
+    // Show Boss Menu and ensure we're on dashboard tab
     $('#illegal-boss-menu').fadeIn(CLOSE_ANIMATION_DURATION);
+    switchIllegalTab('illegal-dashboard', $('.illegal-tabs .tab-btn').first());
     window.currentIllegalMenu = 'boss';
+    
+    // Load fleet immediately
+    loadIllegalFleet();
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -347,10 +432,46 @@ function openIllegalShopFromMenu() {
     $.post('https://Heli-Taxi/requestIllegalShopFromMenu', JSON.stringify({}));
 }
 
+function openIllegalShopFromIllegalMenu() {
+    console.log('[ILLEGAL-UI] Opening illegal shop from illegal boss menu fleet tab');
+    
+    $.post('https://Heli-Taxi/requestIllegalShopFromMenu', JSON.stringify({}));
+}
+
 function openIllegalGarageFromMenu() {
     console.log('[ILLEGAL-UI] Requesting illegal garage from boss menu');
     
     $.post('https://Heli-Taxi/requestIllegalGarageFromMenu', JSON.stringify({}));
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DISPLAY ILLEGAL FLEET IN BOSS MENU
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function displayIllegalFleet(vehicles) {
+    console.log('[ILLEGAL-UI] Displaying illegal fleet:', vehicles);
+    
+    const container = $('#illegalVehicleList');
+    container.empty();
+    
+    if (!vehicles || vehicles.length === 0) {
+        container.html('<div class="no-data" style="padding: 40px; text-align: center; color: #999;">Keine Army Fahrzeuge im Bestand</div>');
+        return;
+    }
+    
+    vehicles.forEach(function(vehicle) {
+        const vehicleName = vehicle.label || vehicle.model || 'Unknown';
+        const vehicleCard = $('<div>').addClass('vehicle-card illegal-vehicle-card').html(`
+            <div class="vehicle-name" style="color: #ff4444;">${vehicleName}</div>
+            <div class="vehicle-model" style="color: #999; font-size: 12px; margin-top: 5px;">Model: ${vehicle.model}</div>
+            <div class="vehicle-plate" style="color: #666; font-size: 11px; margin-top: 5px;">Kennzeichen: ${vehicle.plate || 'N/A'}</div>
+            <div class="vehicle-status" style="color: #00ff00; font-size: 12px; margin-top: 10px;">
+                ${vehicle.state === 1 ? '✓ Verfügbar' : '⚠ Im Einsatz'}
+            </div>
+        `);
+        
+        container.append(vehicleCard);
+    });
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
