@@ -233,13 +233,17 @@ CreateThread(function()
             
             if bossMenuDist < 2.0 then
                 currentHelpText = 'boss_menu'
-                Framework.ShowHelpNotification(_U('open_boss_menu'))
+                if Framework and Framework.ShowHelpNotification then
+                    Framework.ShowHelpNotification(_U('open_boss_menu'))
+                end
                 
                 if IsControlJustReleased(0, 38) then -- E key
                     if isEmployee then
                         OpenBossMenu()
                     else
-                        Framework.Notify(_U('not_employee'), 'error')
+                        if Framework and Framework.Notify then
+                            Framework.Notify(_U('not_employee'), 'error')
+                        end
                     end
                 end
             end
@@ -261,13 +265,17 @@ CreateThread(function()
                 
                 if wardrobeDist < 2.0 then
                     currentHelpText = 'wardrobe'
-                    Framework.ShowHelpNotification(_U('open_wardrobe'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('open_wardrobe'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee or IsBoss() then
                             OpenWardrobe()
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
@@ -278,18 +286,22 @@ CreateThread(function()
         if Config.Locations.DutyToggle and type(Config.Locations.DutyToggle) == 'vector4' then
             local dutyCoords = vec3(Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z)
             local dutyDist = #(playerCoords - dutyCoords)
-            if dutyDist < Config.DrawDistance then
+            if vmDist < Config.DrawDistance then
                 sleep = 0
                 
-                if dutyDist < (Config.Locations.VehicleManagementNPC and Config.Locations.VehicleManagementNPC.interactDistance or 2.5) then
+                if vmDist < (Config.Locations.DutyNPC and Config.Locations.DutyNPC.interactDistance or 2.5) then
                     currentHelpText = 'duty_toggle'
-                    Framework.ShowHelpNotification(_U('toggle_duty'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('toggle_duty'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee then
                             TriggerServerEvent('heli-taxi:server:toggleDuty')
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
@@ -304,13 +316,17 @@ CreateThread(function()
                 
                 if vmDist < (Config.Locations.VehicleManagementNPC and Config.Locations.VehicleManagementNPC.interactDistance or 2.5) then
                     currentHelpText = 'vehicle_management'
-                    Framework.ShowHelpNotification(_U('open_vehicle_management'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('open_vehicle_management'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee then
                             OpenVehicleManagement()
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
@@ -333,13 +349,17 @@ CreateThread(function()
                 
                 if shopDist < 2.0 then
                     currentHelpText = 'vehicle_shop'
-                    Framework.ShowHelpNotification(_U('open_vehicle_shop'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('open_vehicle_shop'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee or IsBoss() then
                             OpenVehicleShop()
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
