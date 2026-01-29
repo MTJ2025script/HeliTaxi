@@ -4,164 +4,305 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Illegal Operations</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="illegal.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 </head>
-<body>
-    <!-- ILLEGAL BACKGROUND - KOMPLETT EIGENSTÄNDIG -->
+<body class="illegal-body">
+    <!-- Illegal UI Background -->
     <div id="illegal-background" class="illegal-bg"></div>
     <div id="illegal-overlay" class="illegal-bg-overlay"></div>
-    <!-- ILLEGALES BOSS MENU (Tablet NPC) -->
-    <div id="illegal-boss-menu" class="illegal-container" style="display: none;">
-        <div class="illegal-header">
-            <h1>ILLEGAL OPERATIONS</h1>
-            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
-        </div>
-        
-        <div class="illegal-content">
-            <!-- Schwarze Kasse & Stats Overview -->
-            <div class="illegal-stats-grid">
-                <div class="black-cash-display">
-                    <div class="cash-label">SCHWARZE KASSE</div>
-                    <div class="cash-amount">$<span id="blackCash">0</span></div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">ARMY VEHICLES</div>
-                    <div class="stat-value" id="armyVehicleCount">0</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">HELIPADS</div>
-                    <div class="stat-value" id="helipadCount">3</div>
-                </div>
+
+    <!-- Illegal Boss Menu (Tablet NPC) - Gleicher Aufbau wie Legal Boss Menu -->
+    <div id="illegalBossMenu" class="menu-container illegal-mode" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🚨 ILLEGAL OPERATIONS</h1>
+                <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
             </div>
             
-            <!-- Quick Actions Grid -->
-            <div class="illegal-actions">
-                <button class="illegal-btn" onclick="openIllegalShopFromMenu()">
-                    <span class="btn-icon">🎖️</span>
-                    <span class="btn-label">ARMY VEHICLES</span>
-                    <span class="btn-desc">Kaufe Military Helikopter</span>
-                </button>
-                <button class="illegal-btn" onclick="openIllegalGarageFromMenu()">
-                    <span class="btn-icon">🚁</span>
-                    <span class="btn-label">ILLEGAL GARAGE</span>
-                    <span class="btn-desc">Bestand & Fahrzeuge verwalten</span>
-                </button>
-                <button class="illegal-btn" onclick="manageIllegalOperations()">
-                    <span class="btn-icon">⚡</span>
-                    <span class="btn-label">OPERATIONS</span>
-                    <span class="btn-desc">Aktivitäten & Missionen</span>
-                </button>
-                <button class="illegal-btn" onclick="viewIllegalTransactions()">
-                    <span class="btn-icon">💸</span>
-                    <span class="btn-label">TRANSAKTIONEN</span>
-                    <span class="btn-desc">Finanzhistorie einsehen</span>
-                </button>
+            <div class="menu-tabs">
+                <button class="tab-btn active" onclick="switchIllegalTab('illegal-dashboard', this)">Dashboard</button>
+                <button class="tab-btn" onclick="switchIllegalTab('illegal-employees', this)">Mitarbeiter</button>
+                <button class="tab-btn" onclick="switchIllegalTab('illegal-fleet', this)">Flotte</button>
+                <button class="tab-btn" onclick="switchIllegalTab('illegal-finances', this)">Finanzen</button>
+                <button class="tab-btn" onclick="switchIllegalTab('illegal-operations', this)">Operations</button>
+                <button class="tab-btn" onclick="switchIllegalTab('illegal-settings', this)">Einstellungen</button>
             </div>
-        </div>
-    </div>
-    
-    <!-- ILLEGALER SHOP (Army Helis) -->
-    <div id="illegal-shop" class="illegal-container" style="display: none;">
-        <div class="illegal-header">
-            <h1>ARMY VEHICLE SHOP</h1>
-            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
-        </div>
-        
-        <div class="illegal-content">
-            <!-- Shop Balance Display -->
-            <div class="shop-balance-bar">
-                <div class="balance-info">
-                    <span class="balance-label">VERFÜGBAR:</span>
-                    <span class="balance-amount">$<span id="shopBalance">0</span></span>
+
+            <div class="menu-body">
+                <!-- Dashboard Tab -->
+                <div id="illegal-dashboard" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">🚨</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Schwarze Kasse</div>
+                                <div class="stat-value" id="illegalBalance">$0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">🎖️</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Army Vehicles</div>
+                                <div class="stat-value" id="illegalArmyCount">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">🚁</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Illegal Helipads</div>
+                                <div class="stat-value">3</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Operations</div>
+                                <div class="stat-value" id="illegalOpsCount">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Heat Level</div>
+                                <div class="stat-value" id="illegalHeat">0%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Profit (Total)</div>
+                                <div class="stat-value" id="illegalProfit">$0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-danger" onclick="toggleIllegalDuty()">
+                            <span id="illegalDutyStatus">Im Dienst gehen</span>
+                        </button>
+                        <button class="btn btn-danger" onclick="switchIllegalTab('illegal-fleet', document.querySelectorAll('.menu-tabs .tab-btn')[2])">
+                            <span>🎖️ Army Fahrzeuge</span>
+                        </button>
+                        <button class="btn btn-danger" onclick="switchIllegalTab('illegal-operations', document.querySelectorAll('.menu-tabs .tab-btn')[4])">
+                            <span>⚡ Operations</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="shop-warning">
-                    ⚠️ MILITARY GRADE VEHICLES - HOHE HEAT
+
+                <!-- Employees Tab -->
+                <div id="illegal-employees" class="tab-content">
+                    <div class="tab-actions">
+                        <p style="color: #ff4444; font-size: 16px; margin-bottom: 15px;">
+                            🚨 Mitarbeiter-Verwaltung erfolgt über das legale Boss-Menü
+                        </p>
+                        <p style="color: #999; font-size: 14px;">
+                            Illegal-Rang Mitarbeiter haben Zugriff auf beide Systeme (legal + illegal).
+                            Verwende das normale Boss-Menü um Mitarbeiter zu verwalten.
+                        </p>
+                    </div>
+                    <div id="illegalEmployeeList" class="data-table">
+                        <h4 style="color: #ff4444; margin-top: 30px;">Illegal Operators</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Operations</th>
+                                </tr>
+                            </thead>
+                            <tbody id="illegalEmployeeTableBody">
+                                <tr>
+                                    <td colspan="3" class="no-data">Lade Mitarbeiter...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Category Tabs -->
-            <div class="shop-categories">
-                <button class="category-btn active" data-category="all" onclick="filterShopCategory('all')">ALLE</button>
-                <button class="category-btn" data-category="transport" onclick="filterShopCategory('transport')">TRANSPORT</button>
-                <button class="category-btn" data-category="attack" onclick="filterShopCategory('attack')">ATTACK</button>
-            </div>
-            
-            <!-- Vehicle Grid -->
-            <div id="illegal-vehicle-list" class="vehicle-grid">
-                <!-- Wird dynamisch gefüllt -->
-            </div>
-        </div>
-    </div>
-    
-    <!-- ILLEGALE GARAGE (Helipad NPCs) -->
-    <div id="illegal-garage" class="illegal-container" style="display: none;">
-        <div class="illegal-header">
-            <h1>ILLEGAL GARAGE</h1>
-            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
-        </div>
-        
-        <div class="illegal-content">
-            <!-- Garage Info Header -->
-            <div class="garage-info">
-                <div class="helipad-info-card">
-                    <div class="helipad-name" id="helipadName">HELIPAD 1</div>
-                    <div class="helipad-status">
-                        <span class="status-label">BESTAND:</span>
-                        <span class="status-value" id="vehicleCount">0</span> Fahrzeuge
+
+                <!-- Fleet Tab - MIT 2 BESTAND! -->
+                <div id="illegal-fleet" class="tab-content">
+                    <h3 style="color: #ff4444; margin-bottom: 20px;">🎖️ Army Fahrzeug-Flotte</h3>
+                    
+                    <!-- BESTAND 1: Owned Army Vehicles -->
+                    <div class="fleet-section">
+                        <h4 style="color: #ff4444;">📦 BESTAND 1 - Gekaufte Army Fahrzeuge</h4>
+                        <p style="color: #999; font-size: 14px; margin-bottom: 15px;">
+                            Deine gekauften Military/Army Helikopter. Verwalte sie über die 3 Illegal Helipads.
+                        </p>
+                        <div id="illegalVehicleList" class="vehicle-grid">
+                            <div class="loading">Lade Army Fahrzeuge...</div>
+                        </div>
+                    </div>
+
+                    <!-- BESTAND 2: Army Vehicle Shop -->
+                    <div class="fleet-section" style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #8b0000;">
+                        <h4 style="color: #ff4444;">🛒 BESTAND 2 - Army Vehicle Shop</h4>
+                        <div class="tab-actions">
+                            <button class="btn btn-danger" onclick="openIllegalShop()">
+                                <span>🛒 Army Vehicle Shop öffnen</span>
+                            </button>
+                            <p style="color: #999; font-size: 14px; margin-top: 10px;">
+                                Kaufe neue Military/Army Helikopter aus der schwarzen Kasse
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finances Tab -->
+                <div id="illegal-finances" class="tab-content">
+                    <div class="finance-overview">
+                        <div class="finance-card illegal-finance">
+                            <h3>🚨 Schwarze Kasse</h3>
+                            <div class="finance-amount illegal" id="illegalFinanceBalance">$0</div>
+                        </div>
+                        <div class="finance-card illegal-finance">
+                            <h3>Illegal Einnahmen</h3>
+                            <div class="finance-amount income" id="illegalFinanceIncome">$0</div>
+                        </div>
+                        <div class="finance-card illegal-finance">
+                            <h3>Illegal Ausgaben</h3>
+                            <div class="finance-amount expense" id="illegalFinanceExpenses">$0</div>
+                        </div>
+                    </div>
+
+                    <div class="tab-actions">
+                        <button class="btn btn-danger" onclick="showIllegalDepositDialog()">💵 Einzahlen</button>
+                        <button class="btn btn-danger" onclick="showIllegalWithdrawDialog()">💸 Abheben</button>
+                    </div>
+
+                    <div id="illegalTransactionList" class="data-table">
+                        <h4 style="color: #ff4444;">Transaktionen (Schwarze Kasse)</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Typ</th>
+                                    <th>Betrag</th>
+                                    <th>Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody id="illegalTransactionTableBody">
+                                <tr>
+                                    <td colspan="4" class="no-data">Lade Transaktionen...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Operations Tab -->
+                <div id="illegal-operations" class="tab-content">
+                    <h3 style="color: #ff4444; margin-bottom: 20px;">⚡ Illegal Operations Dashboard</h3>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Heat Level</div>
+                                <div class="stat-value" id="illegalHeatOps">0%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Operations</div>
+                                <div class="stat-value" id="illegalOpsCountOps">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card illegal-stat">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Total Profit</div>
+                                <div class="stat-value" id="illegalProfitOps">$0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="operations-list" id="illegalOperationsList">
+                        <h4 style="color: #ff4444; margin: 30px 0 15px 0;">Recent Operations</h4>
+                        <div class="no-data">Keine Operations</div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="illegal-settings" class="tab-content">
+                    <h3 style="color: #ff4444; margin-bottom: 20px;">⚙️ Einstellungen</h3>
+                    
+                    <div class="settings-section">
+                        <h4 style="color: #ff4444;">Illegal Operations Settings</h4>
+                        <p style="color: #999; font-size: 14px;">
+                            Grundlegende Einstellungen für illegale Operationen.
+                        </p>
+                        
+                        <div class="setting-item" style="margin-top: 20px; padding: 15px; background: rgba(139, 0, 0, 0.1); border-left: 3px solid #8b0000;">
+                            <p style="color: #ff4444; font-weight: 500;">⚠️ Wichtig</p>
+                            <p style="color: #999; font-size: 14px; margin-top: 5px;">
+                                Alle illegalen Aktivitäten tragen ein hohes Risiko. Heat Level wird durch Operations erhöht.
+                                Bei zu hohem Heat Level können Konsequenzen folgen.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Vehicle Inventory List -->
-            <div class="garage-section-label">FAHRZEUG-BESTAND</div>
-            <div id="illegal-garage-vehicles" class="vehicle-list">
-                <!-- Wird dynamisch gefüllt -->
+        </div>
+    </div>
+
+    <!-- Illegal Vehicle Shop (Separate Menu) -->
+    <div id="illegalVehicleShop" class="menu-container illegal-mode" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🎖️ Army Vehicle Shop</h1>
+                <button class="close-btn" onclick="closeIllegalShop()">✕</button>
             </div>
-            
-            <!-- Garage Actions -->
-            <div class="garage-actions">
-                <button class="illegal-btn secondary" onclick="storeIllegalVehicle()">
-                    <span class="btn-icon">📦</span>
-                    FAHRZEUG EINPARKEN
-                </button>
-                <button class="illegal-btn secondary" onclick="refreshGarage()">
-                    <span class="btn-icon">🔄</span>
-                    BESTAND AKTUALISIEREN
-                </button>
+            <div class="menu-body">
+                <div class="shop-balance illegal-shop-balance">
+                    Schwarze Kasse: <span id="illegalShopBalance">$0</span>
+                </div>
+                <div class="shop-warning illegal-warning">
+                    ⚠️ MILITARY GRADE VEHICLES - HIGH HEAT - PRISON RISK!
+                </div>
+                <div id="illegalShopVehicleGrid" class="vehicle-grid">
+                    <div class="loading">Lade Army Vehicles...</div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- ILLEGALES MANAGEMENT -->
-    <div id="illegal-management" class="illegal-container" style="display: none;">
-        <div class="illegal-header">
-            <h1>ILLEGAL OPERATIONS MANAGEMENT</h1>
-            <button class="close-btn" onclick="closeIllegalMenu()">✕</button>
-        </div>
-        
-        <div class="illegal-content">
-            <div class="operations-stats">
-                <div class="stat-box">
-                    <div class="stat-label">HEAT LEVEL</div>
-                    <div class="stat-value" id="heatLevel">0%</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">OPERATIONS</div>
-                    <div class="stat-value" id="operationsCount">0</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">PROFIT</div>
-                    <div class="stat-value">$<span id="totalProfit">0</span></div>
-                </div>
+
+    <!-- Illegal Garage (3 Helipad NPCs) -->
+    <div id="illegalGarage" class="menu-container illegal-mode" style="display: none;">
+        <div class="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1>🚁 Illegal Garage</h1>
+                <button class="close-btn" onclick="closeIllegalGarage()">✕</button>
             </div>
-            
-            <div class="operations-list" id="operationsList">
-                <!-- Wird dynamisch gefüllt -->
+            <div class="menu-body">
+                <div class="garage-info illegal-garage-info">
+                    <h3 id="illegalHelipadName" style="color: #ff4444;">HELIPAD 1</h3>
+                    <p style="color: #999; font-size: 14px;">
+                        Fahrzeuge: <span id="illegalGarageCount">0</span>
+                    </p>
+                </div>
+                
+                <div id="illegalGarageVehicles" class="vehicle-list">
+                    <div class="loading">Lade Fahrzeuge...</div>
+                </div>
+                
+                <div class="garage-actions">
+                    <button class="btn btn-danger" onclick="storeIllegalVehicle()">
+                        <span>📦 Fahrzeug einparken</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <script src="script.js"></script>
     <script src="illegal.js"></script>
 </body>
 </html>
