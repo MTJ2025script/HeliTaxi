@@ -1,16 +1,13 @@
 // ILLEGALES UI - KOMPLETT GETRENNT VOM NORMALEN SYSTEM
+// GLEICHER AUFBAU WIE LEGAL, ABER STRIKT GETRENNT
 
 // Use window.currentIllegalMenu to share state with script.js for ESC key handling
 window.currentIllegalMenu = null;
 let illegalData = {};
-let selectedVehicle = null;
-let illegalBackgroundEnabled = true;
-let illegalBackgroundImage = 'illegal_background.jpg';
-let isClosing = false; // Prevent multiple simultaneous close calls
+let illegalCurrentTab = 'illegal-dashboard';
 
 // Constants
-const CLOSE_ANIMATION_DURATION = 300; // fadeIn/fadeOut duration in ms
-const CLOSE_DEBOUNCE_TIMEOUT = 350; // slightly longer than animation
+const CLOSE_ANIMATION_DURATION = 300;
 
 // Listen for messages from Lua
 window.addEventListener('message', function(event) {
@@ -31,8 +28,11 @@ window.addEventListener('message', function(event) {
         case 'openIllegalGarage':
             openIllegalGarage(data.vehicles, data.helipadIndex);
             break;
-        case 'openIllegalManagement':
-            openIllegalManagement(data.operations);
+        case 'updateIllegalFleet':
+            displayIllegalFleet(data.vehicles);
+            break;
+        case 'updateIllegalTransactions':
+            displayIllegalTransactions(data.transactions);
             break;
         case 'closeIllegalMenu':
             closeIllegalMenu();
@@ -40,19 +40,16 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ILLEGAL BACKGROUND SYSTEM
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+// Background system
 function setIllegalBackground(config) {
     console.log('[ILLEGAL-UI] Setting background:', config);
     
-    illegalBackgroundEnabled = config.enabled !== false;
-    illegalBackgroundImage = config.image || 'illegal_background.jpg';
+    const enabled = config.enabled !== false;
+    const image = config.image || 'illegal_background.jpg';
     
-    if (illegalBackgroundEnabled) {
+    if (enabled) {
         $('#illegal-background').css({
-            'background-image': `url('${illegalBackgroundImage}')`,
+            'background-image': `url('${image}')`,
             'opacity': (config.opacity || 90) / 100,
             'filter': config.blur ? `blur(${config.blurStrength || 5}px)` : 'none'
         });
@@ -69,277 +66,366 @@ function disableIllegalBackground() {
     $('body').removeClass('illegal-active');
 }
 
-// Close menu on ESC - with conflict prevention
+// Close menu on ESC
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape' && window.currentIllegalMenu) {
-        event.stopPropagation(); // Prevent script.js ESC handler from also firing
+        event.stopPropagation();
         event.preventDefault();
         closeIllegalMenu();
     }
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ILLEGAL BOSS MENU (Tablet NPC)
+// ILLEGAL BOSS MENU - TABS SYSTEM (wie Legal Boss Menu)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+function switchIllegalTab(tabName, element) {
+    console.log('[ILLEGAL-UI] Switching to tab:', tabName);
+    
+    illegalCurrentTab = tabName;
+    
+    // Update tab buttons
+    $('#illegalBossMenu .tab-btn').removeClass('active');
+    if (element) {
+        $(element).addClass('active');
+    }
+    
+    // Update tab content
+    $('#illegalBossMenu .tab-content').removeClass('active');
+    $('#' + tabName).addClass('active');
+    
+    // Load tab data
+    switch(tabName) {
+        case 'illegal-dashboard':
+            loadIllegalDashboard();
+            break;
+        case 'illegal-fleet':
+            loadIllegalFleet();
+            break;
+        case 'illegal-finances':
+            loadIllegalFinances();
+            break;
+        case 'illegal-operations':
+            loadIllegalOperations();
+            break;
+    }
+}
+
+function loadIllegalDashboard() {
+    console.log('[ILLEGAL-UI] Loading dashboard');
+    updateIllegalDashboardStats();
+}
+
+function loadIllegalFleet() {
+    console.log('[ILLEGAL-UI] Loading fleet');
+    $.post('https://Heli-Taxi/getIllegalFleet', JSON.stringify({}));
+}
+
+function loadIllegalFinances() {
+    console.log('[ILLEGAL-UI] Loading finances');
+    updateIllegalFinancesDisplay();
+    $.post('https://Heli-Taxi/getIllegalTransactions', JSON.stringify({}));
+}
+
+function loadIllegalOperations() {
+    console.log('[ILLEGAL-UI] Loading operations');
+    updateIllegalOperationsStats();
+    $.post('https://Heli-Taxi/getIllegalOperations', JSON.stringify({}));
+}
+
 function openIllegalBossMenu(data) {
-    console.log('[ILLEGAL-UI] Opening Boss Menu with data:', data);
+    console.log('[ILLEGAL-UI] Opening Illegal Boss Menu with data:', data);
     
     illegalData = data || {};
-    isClosing = false; // Reset closing flag when opening new menu
     
     // Enable illegal background
     enableIllegalBackground();
     
-    // Update schwarze Kasse
-    $('#blackCash').text(formatMoney(data.blackCash || 0));
+    // Update all stats
+    updateIllegalDashboardStats();
+    updateIllegalFinancesDisplay();
+    updateIllegalOperationsStats();
     
-    // Hide all menus
-    $('.illegal-container').hide();
-    
-    // Show Boss Menu
-    $('#illegal-boss-menu').fadeIn(CLOSE_ANIMATION_DURATION);
+    // Show menu
+    $('#illegalBossMenu').fadeIn(CLOSE_ANIMATION_DURATION);
+    switchIllegalTab('illegal-dashboard', $('#illegalBossMenu .tab-btn').first());
     window.currentIllegalMenu = 'boss';
+    
+    // Load fleet immediately
+    loadIllegalFleet();
+}
+
+function updateIllegalDashboardStats() {
+    if (!illegalData) return;
+    
+    $('#illegalBalance').text('$' + formatMoney(illegalData.blackCash || 0));
+    $('#illegalArmyCount').text(illegalData.armyVehicleCount || 0);
+    $('#illegalOpsCount').text(illegalData.operationsCount || 0);
+    $('#illegalHeat').text((illegalData.heatLevel || 0) + '%');
+    $('#illegalProfit').text('$' + formatMoney(illegalData.totalProfit || 0));
+}
+
+function updateIllegalFinancesDisplay() {
+    if (!illegalData) return;
+    
+    $('#illegalFinanceBalance').text('$' + formatMoney(illegalData.blackCash || 0));
+    $('#illegalFinanceIncome').text('$' + formatMoney(illegalData.illegalIncome || 0));
+    $('#illegalFinanceExpenses').text('$' + formatMoney(illegalData.illegalExpenses || 0));
+}
+
+function updateIllegalOperationsStats() {
+    if (!illegalData) return;
+    
+    $('#illegalHeatOps').text((illegalData.heatLevel || 0) + '%');
+    $('#illegalOpsCountOps').text(illegalData.operationsCount || 0);
+    $('#illegalProfitOps').text('$' + formatMoney(illegalData.totalProfit || 0));
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ILLEGAL SHOP (Army Helis)
+// ILLEGAL FLEET DISPLAY (BESTAND 1)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function openIllegalShop(vehicles) {
-    console.log('[ILLEGAL-UI] Opening Shop with vehicles:', vehicles);
+function displayIllegalFleet(vehicles) {
+    console.log('[ILLEGAL-UI] Displaying fleet:', vehicles);
     
-    isClosing = false; // Reset closing flag when opening new menu
+    const container = $('#illegalVehicleList');
+    container.empty();
     
-    // Enable illegal background
-    enableIllegalBackground();
+    if (!vehicles || vehicles.length === 0) {
+        container.html('<div class="no-data" style="padding: 40px; text-align: center; color: #999;">Keine Army Fahrzeuge im Bestand</div>');
+        return;
+    }
     
-    // Hide all menus
-    $('.illegal-container').hide();
+    vehicles.forEach(function(vehicle) {
+        const vehicleName = vehicle.label || vehicle.model || 'Unknown';
+        const vehicleCard = $('<div>').addClass('vehicle-card illegal-vehicle-card').html(`
+            <div class="vehicle-name" style="color: #ff4444; font-weight: 500; margin-bottom: 8px;">${vehicleName}</div>
+            <div class="vehicle-model" style="color: #999; font-size: 12px; margin-bottom: 5px;">Model: ${vehicle.model}</div>
+            <div class="vehicle-plate" style="color: #666; font-size: 11px; margin-bottom: 10px;">🔖 ${vehicle.plate || 'N/A'}</div>
+            <div class="vehicle-status" style="color: ${vehicle.state === 1 ? '#00ff00' : '#ffaa00'}; font-size: 12px;">
+                ${vehicle.state === 1 ? '✓ Verfügbar' : '⚠ Im Einsatz'}
+            </div>
+        `);
+        
+        container.append(vehicleCard);
+    });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ILLEGAL SHOP (BESTAND 2)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function openIllegalShop() {
+    console.log('[ILLEGAL-UI] Opening illegal shop');
+    $.post('https://Heli-Taxi/requestIllegalShop', JSON.stringify({}));
+}
+
+function openIllegalShopActual(vehicles) {
+    console.log('[ILLEGAL-UI] Opening shop with vehicles:', vehicles);
     
-    // Clear vehicle list
-    $('#illegal-vehicle-list').empty();
+    // Hide boss menu, show shop
+    $('#illegalBossMenu').hide();
     
-    // Add vehicles
-    if (vehicles && vehicles.length > 0) {
+    // Update shop balance
+    $('#illegalShopBalance').text(formatMoney(illegalData.blackCash || 0));
+    
+    // Clear and populate vehicle grid
+    const container = $('#illegalShopVehicleGrid');
+    container.empty();
+    
+    if (!vehicles || vehicles.length === 0) {
+        container.html('<div class="no-data" style="padding: 40px; text-align: center; color: #999;">Keine Fahrzeuge verfügbar</div>');
+    } else {
         vehicles.forEach(function(vehicle) {
-            const vehicleHtml = `
-                <div class="vehicle-name">${vehicle.name}</div>
-                <div class="vehicle-price">$${formatMoney(vehicle.price)}</div>
-                <div class="vehicle-stats">
-                    ⚡ Speed: ${vehicle.speed || 'N/A'} | 
-                    🔧 Handling: ${vehicle.handling || 'N/A'}
+            const vehicleName = vehicle.label || vehicle.model || 'Unknown';
+            const vehicleCard = $('<div>').addClass('vehicle-card illegal-vehicle-card').html(`
+                <div class="vehicle-name" style="color: #ff4444; font-weight: 500; margin-bottom: 10px;">${vehicleName}</div>
+                <div class="vehicle-price" style="color: #00ff00; font-size: 22px; font-weight: 300; margin: 10px 0;">$${formatMoney(vehicle.price)}</div>
+                <div class="vehicle-category" style="color: #999; font-size: 11px; margin-bottom: 8px;">
+                    ${vehicle.category === 'military' ? '🎖️ MILITARY' : '🚁 ARMY'}
                 </div>
-            `;
-            const vehicleCard = $('<div>').addClass('vehicle-card').html(vehicleHtml);
+                <div class="vehicle-stats" style="color: #666; font-size: 11px;">
+                    ${vehicle.passengers ? '👥 ' + vehicle.passengers + ' Sitze' : ''}
+                    ${vehicle.armed ? ' | 🎯 Bewaffnet' : ''}
+                </div>
+            `);
             
             vehicleCard.click(function() {
                 buyIllegalVehicle(vehicle);
             });
             
-            $('#illegal-vehicle-list').append(vehicleCard);
+            container.append(vehicleCard);
         });
-    } else {
-        $('#illegal-vehicle-list').html('<div style="color: #999; text-align: center; padding: 40px;">Keine Fahrzeuge verfügbar</div>');
     }
     
-    // Show Shop
-    $('#illegal-shop').fadeIn(CLOSE_ANIMATION_DURATION);
+    $('#illegalVehicleShop').fadeIn(CLOSE_ANIMATION_DURATION);
     window.currentIllegalMenu = 'shop';
 }
 
 function buyIllegalVehicle(vehicle) {
-    console.log('[ILLEGAL-UI] Buying vehicle:', vehicle.model);
+    console.log('[ILLEGAL-UI] Buying vehicle:', vehicle);
     
-    $.post('https://Heli-Taxi/buyIllegalVehicle', JSON.stringify({
+    $.post('https://Heli-Taxi/purchaseIllegalVehicle', JSON.stringify({
         model: vehicle.model,
         price: vehicle.price
     }));
 }
 
+function closeIllegalShop() {
+    $('#illegalVehicleShop').fadeOut(CLOSE_ANIMATION_DURATION, function() {
+        $('#illegalBossMenu').fadeIn(CLOSE_ANIMATION_DURATION);
+    });
+    window.currentIllegalMenu = 'boss';
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ILLEGAL GARAGE (Helipad NPCs)
+// ILLEGAL GARAGE (3 Helipad NPCs)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function openIllegalGarage(vehicles, helipadIndex) {
-    console.log('[ILLEGAL-UI] Opening Garage | Helipad:', helipadIndex, '| Vehicles:', vehicles);
-    
-    isClosing = false; // Reset closing flag when opening new menu
+    console.log('[ILLEGAL-UI] Opening garage | Helipad:', helipadIndex, '| Vehicles:', vehicles);
     
     // Enable illegal background
     enableIllegalBackground();
     
-    // Hide all menus
-    $('.illegal-container').hide();
+    // Update helipad name
+    $('#illegalHelipadName').text('HELIPAD ' + (helipadIndex || 1));
+    $('#illegalGarageCount').text(vehicles ? vehicles.length : 0);
     
-    // Set helipad name
-    $('#helipadName').text('HELIPAD ' + (helipadIndex || 1));
+    // Clear and populate vehicle list
+    const container = $('#illegalGarageVehicles');
+    container.empty();
     
-    // Clear vehicle list
-    $('#illegal-garage-vehicles').empty();
-    
-    // Add vehicles
-    if (vehicles && vehicles.length > 0) {
+    if (!vehicles || vehicles.length === 0) {
+        container.html('<div class="no-data" style="padding: 40px; text-align: center; color: #999;">Keine Fahrzeuge geparkt</div>');
+    } else {
         vehicles.forEach(function(vehicle) {
-            const vehicleItemHtml = `
-                <div class="vehicle-info">
-                    <div class="name">${vehicle.model}</div>
-                    <div class="plate">${vehicle.plate || 'N/A'}</div>
-                </div>
-                <button class="illegal-btn" style="padding: 8px 15px; font-size: 14px;">SPAWN</button>
-            `;
-            const vehicleItem = $('<div>').addClass('vehicle-item').html(vehicleItemHtml);
+            const vehicleName = vehicle.label || vehicle.model || 'Unknown';
+            const fuelPercent = Math.max(0, Math.min(100, vehicle.fuel || 100));
+            const fuelColor = fuelPercent > 50 ? '#00ff00' : fuelPercent > 25 ? '#ffaa00' : '#ff0000';
             
-            vehicleItem.find('.illegal-btn').click(function() {
-                spawnIllegalVehicleById(vehicle.id);
+            const vehicleItem = $('<div>').addClass('vehicle-item').css({
+                'background': 'rgba(0, 0, 0, 0.4)',
+                'border-left': '2px solid #8b0000',
+                'padding': '15px',
+                'margin-bottom': '10px',
+                'display': 'flex',
+                'justify-content': 'space-between',
+                'align-items': 'center'
+            }).html(`
+                <div class="vehicle-info">
+                    <div class="name" style="color: #ff4444; font-weight: 500; margin-bottom: 5px;">${vehicleName}</div>
+                    <div class="plate" style="color: #999; font-size: 12px; margin-bottom: 5px;">🔖 ${vehicle.plate || 'N/A'}</div>
+                    <div class="fuel-bar" style="display: flex; align-items: center; gap: 10px;">
+                        <div class="fuel-bar-bg" style="width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                            <div class="fuel-bar-fill" style="width: ${fuelPercent}%; height: 100%; background: ${fuelColor};"></div>
+                        </div>
+                        <span style="color: #666; font-size: 11px;">⛽ ${Math.round(fuelPercent)}%</span>
+                    </div>
+                </div>
+                <button class="btn btn-danger" style="padding: 8px 16px; font-size: 12px;">SPAWNEN</button>
+            `);
+            
+            vehicleItem.find('.btn').click(function() {
+                spawnIllegalVehicle(vehicle.id);
             });
             
-            $('#illegal-garage-vehicles').append(vehicleItem);
+            container.append(vehicleItem);
         });
-    } else {
-        $('#illegal-garage-vehicles').html('<div style="color: #999; text-align: center; padding: 40px;">Keine Fahrzeuge geparkt</div>');
     }
     
-    // Show Garage
-    $('#illegal-garage').fadeIn(CLOSE_ANIMATION_DURATION);
+    $('#illegalGarage').fadeIn(CLOSE_ANIMATION_DURATION);
     window.currentIllegalMenu = 'garage';
 }
 
-function spawnIllegalVehicle() {
-    if (selectedVehicle) {
-        console.log('[ILLEGAL-UI] Spawning vehicle:', selectedVehicle);
-        
-        $.post('https://Heli-Taxi/spawnIllegalVehicle', JSON.stringify({
-            vehicleId: selectedVehicle
-        }));
-        
-        closeIllegalMenu();
-    }
-}
-
-function spawnIllegalVehicleById(vehicleId) {
-    console.log('[ILLEGAL-UI] Spawning vehicle by ID:', vehicleId);
+function spawnIllegalVehicle(vehicleId) {
+    console.log('[ILLEGAL-UI] Spawning vehicle:', vehicleId);
     
     $.post('https://Heli-Taxi/spawnIllegalVehicle', JSON.stringify({
         vehicleId: vehicleId
     }));
     
-    closeIllegalMenu();
+    closeIllegalGarage();
 }
 
 function storeIllegalVehicle() {
-    console.log('[ILLEGAL-UI] Storing current vehicle');
+    console.log('[ILLEGAL-UI] Storing vehicle');
     
     $.post('https://Heli-Taxi/storeIllegalVehicle', JSON.stringify({}));
+}
+
+function closeIllegalGarage() {
+    $('#illegalGarage').fadeOut(CLOSE_ANIMATION_DURATION);
+    disableIllegalBackground();
+    window.currentIllegalMenu = null;
     
-    closeIllegalMenu();
+    $.post('https://Heli-Taxi/closeMenu', JSON.stringify({}));
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ILLEGAL MANAGEMENT
+// TRANSACTIONS DISPLAY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function openIllegalManagement(operations) {
-    console.log('[ILLEGAL-UI] Opening Management with operations:', operations);
+function displayIllegalTransactions(transactions) {
+    console.log('[ILLEGAL-UI] Displaying transactions:', transactions);
     
-    isClosing = false; // Reset closing flag when opening new menu
+    const tbody = $('#illegalTransactionTableBody');
+    tbody.empty();
     
-    // Hide all menus
-    $('.illegal-container').hide();
-    
-    // Update stats
-    $('#heatLevel').text((operations.heatLevel || 0) + '%');
-    $('#operationsCount').text(operations.count || 0);
-    $('#totalProfit').text(formatMoney(operations.totalProfit || 0));
-    
-    // Clear operations list
-    $('#operationsList').empty();
-    
-    // Add operations
-    if (operations.list && operations.list.length > 0) {
-        operations.list.forEach(function(op) {
-            const operationItemHtml = `
-                <div class="operation-header">
-                    <span class="operation-type">${op.type}</span>
-                    <span class="operation-profit">$${formatMoney(op.profit)}</span>
-                </div>
-                <div class="operation-details">${op.details}</div>
-            `;
-            const operationItem = $('<div>').addClass('operation-item').html(operationItemHtml);
-            
-            $('#operationsList').append(operationItem);
-        });
-    } else {
-        $('#operationsList').html('<div style="color: #999; text-align: center; padding: 40px;">Keine Operations</div>');
+    if (!transactions || transactions.length === 0) {
+        tbody.html('<tr><td colspan="4" class="no-data">Keine Transaktionen</td></tr>');
+        return;
     }
     
-    // Show Management
-    $('#illegal-management').fadeIn(CLOSE_ANIMATION_DURATION);
-    window.currentIllegalMenu = 'management';
-}
-
-function manageIllegalOperations() {
-    console.log('[ILLEGAL-UI] Opening illegal operations management');
-    
-    $.post('https://Heli-Taxi/requestIllegalOperations', JSON.stringify({}));
-}
-
-function viewIllegalTransactions() {
-    console.log('[ILLEGAL-UI] Opening illegal transactions');
-    
-    $.post('https://Heli-Taxi/requestIllegalTransactions', JSON.stringify({}));
+    transactions.forEach(function(tx) {
+        const row = $('<tr>').html(`
+            <td>${tx.date || '-'}</td>
+            <td>${tx.type || '-'}</td>
+            <td style="color: ${tx.amount > 0 ? '#00ff00' : '#ff4444'};">$${formatMoney(Math.abs(tx.amount || 0))}</td>
+            <td>${tx.description || '-'}</td>
+        `);
+        tbody.append(row);
+    });
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// NAVIGATION FROM BOSS MENU
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function openIllegalShopFromMenu() {
-    console.log('[ILLEGAL-UI] Requesting illegal shop from boss menu');
-    
-    $.post('https://Heli-Taxi/requestIllegalShopFromMenu', JSON.stringify({}));
-}
-
-function openIllegalGarageFromMenu() {
-    console.log('[ILLEGAL-UI] Requesting illegal garage from boss menu');
-    
-    $.post('https://Heli-Taxi/requestIllegalGarageFromMenu', JSON.stringify({}));
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// UTILITY FUNCTIONS
+// CLOSE MENU
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function closeIllegalMenu() {
-    // Prevent multiple simultaneous close calls
-    if (isClosing) {
-        console.log('[ILLEGAL-UI] Already closing, ignoring duplicate call');
-        return;
-    }
+    console.log('[ILLEGAL-UI] Closing all menus');
     
-    if (!window.currentIllegalMenu) {
-        console.log('[ILLEGAL-UI] No menu open, ignoring close call');
-        return;
-    }
+    $('#illegalBossMenu').fadeOut(CLOSE_ANIMATION_DURATION);
+    $('#illegalVehicleShop').fadeOut(CLOSE_ANIMATION_DURATION);
+    $('#illegalGarage').fadeOut(CLOSE_ANIMATION_DURATION);
     
-    console.log('[ILLEGAL-UI] Closing illegal menu');
-    isClosing = true;
-    
-    // Disable illegal background
     disableIllegalBackground();
-    
-    $('.illegal-container').fadeOut(CLOSE_ANIMATION_DURATION);
     window.currentIllegalMenu = null;
-    selectedVehicle = null;
     
-    $.post('https://Heli-Taxi/closeIllegalMenu', JSON.stringify({}));
-    
-    // Reset closing flag after animation completes
-    setTimeout(function() {
-        isClosing = false;
-    }, CLOSE_DEBOUNCE_TIMEOUT);
+    $.post('https://Heli-Taxi/closeMenu', JSON.stringify({}));
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HELPER FUNCTIONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function formatMoney(amount) {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+function toggleIllegalDuty() {
+    console.log('[ILLEGAL-UI] Toggling duty');
+    $.post('https://Heli-Taxi/toggleDuty', JSON.stringify({}));
+}
+
+function showIllegalDepositDialog() {
+    console.log('[ILLEGAL-UI] Show deposit dialog');
+    // TODO: Implement deposit dialog
+}
+
+function showIllegalWithdrawDialog() {
+    console.log('[ILLEGAL-UI] Show withdraw dialog');
+    // TODO: Implement withdraw dialog
+}
+
+console.log('[ILLEGAL-UI] illegal.js loaded - STRIKT GETRENNT VERSION');

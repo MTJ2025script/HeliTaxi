@@ -6,9 +6,54 @@ local employeeData = nil
 -- NPC Storage
 local spawnedNPCs = {}
 
+-- Load Maze Bank Tower Interior (based on bob74_ipl best practices)
+-- Source: https://github.com/Bob74/bob74_ipl/blob/master/dlc_finance/office2.lua
+CreateThread(function()
+    print("[Heli-Taxi] Loading Maze Bank Tower interior...")
+    
+    -- Maze Bank Tower Office 2 coordinates: -75.8466, -826.9893, 243.3859
+    -- Using "rich" style (ex_dt1_11_office_02b) - Interior ID 239617
+    local officeName = "ex_dt1_11_office_02b"
+    local interiorId = 239617  -- Rich style interior ID
+    
+    -- Request the IPL
+    RequestIpl(officeName)
+    
+    -- Wait for IPL to load
+    Wait(500)
+    
+    -- Enable office props (standard from bob74_ipl)
+    if IsValidInterior(interiorId) then
+        EnableInteriorProp(interiorId, "office_chairs")
+        EnableInteriorProp(interiorId, "office_booze")
+        
+        -- Refresh the interior to apply changes
+        RefreshInterior(interiorId)
+        print("[Heli-Taxi] Maze Bank Tower interior loaded (ID: " .. interiorId .. ")")
+    else
+        -- Fallback: Try dynamic interior ID detection
+        local dynamicInteriorId = GetInteriorAtCoords(-75.8466, -826.9893, 243.3859)
+        if dynamicInteriorId ~= 0 then
+            EnableInteriorProp(dynamicInteriorId, "office_chairs")
+            RefreshInterior(dynamicInteriorId)
+            print("[Heli-Taxi] Maze Bank Tower interior loaded (Dynamic ID: " .. dynamicInteriorId .. ")")
+        else
+            print("[Heli-Taxi] Warning: Could not load Maze Bank Tower interior")
+        end
+    end
+end)
+
 -- Create Blips
 CreateThread(function()
-    if not Config.ShowBlips then return end
+    print("[Heli-Taxi] Starting blip creation thread...")
+    print("[Heli-Taxi] Config.ShowBlips = " .. tostring(Config.ShowBlips))
+    
+    if not Config.ShowBlips then 
+        print("[Heli-Taxi] Blips disabled in config")
+        return 
+    end
+    
+    print("[Heli-Taxi] Creating HQ blip at: " .. tostring(Config.Locations.HQ))
     
     -- HQ Blip
     local blip = AddBlipForCoord(Config.Locations.HQ.x, Config.Locations.HQ.y, Config.Locations.HQ.z)
@@ -20,31 +65,36 @@ CreateThread(function()
     BeginTextCommandSetBlipName('STRING')
     AddTextComponentString(Config.CompanyBlip.label)
     EndTextCommandSetBlipName(blip)
+    
+    print("[Heli-Taxi] HQ blip created successfully!")
 end)
 
 -- Spawn NPCs
 CreateThread(function()
+    print("[Heli-Taxi] Starting NPC spawn thread...")
     Wait(1000)
+    
+    print("[Heli-Taxi] Checking DutyToggle location...")
+    print("[Heli-Taxi] DutyToggle = " .. tostring(Config.Locations.DutyToggle))
+    print("[Heli-Taxi] DutyToggle type = " .. type(Config.Locations.DutyToggle))
     
     -- Spawn Duty Toggle NPC (if it's a vector4, it's an NPC location)
     if Config.Locations.DutyToggle and type(Config.Locations.DutyToggle) == 'vector4' then
+        print("[Heli-Taxi] Spawning Duty Toggle NPC...")
         local npcConfig = Config.Locations.DutyNPC or {}
         local model = GetHashKey(npcConfig.model or 'a_f_y_business_02')
         
+        print("[Heli-Taxi] Requesting model: " .. tostring(npcConfig.model or 'a_f_y_business_02'))
         RequestModel(model)
         while not HasModelLoaded(model) do
             Wait(1)
         end
+        print("[Heli-Taxi] Model loaded!")
         
-        -- Get ground Z coordinate with offset to prevent floating
-        local groundZ = Config.Locations.DutyToggle.z
-        local found, zCoord = GetGroundZFor_3dCoord(Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z + 5.0, false)
-        if found then
-            groundZ = zCoord + 1.0  -- +1.0 offset so NPC stands ON ground
-        end
-        
-        local npc = CreatePed(4, model, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, groundZ, Config.Locations.DutyToggle.w, false, true)
-        SetEntityCoordsNoOffset(npc, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, groundZ, false, false, false)
+        -- Use exact Z coordinate from config (works for both interior and exterior)
+        local npc = CreatePed(4, model, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z, Config.Locations.DutyToggle.w, false, true)
+        print("[Heli-Taxi] Duty NPC created, entity ID: " .. tostring(npc))
+        SetEntityCoordsNoOffset(npc, Config.Locations.DutyToggle.x, Config.Locations.DutyToggle.y, Config.Locations.DutyToggle.z, false, false, false)
         SetEntityHeading(npc, Config.Locations.DutyToggle.w)
         FreezeEntityPosition(npc, true)
         SetEntityInvincible(npc, true)
@@ -53,27 +103,31 @@ CreateThread(function()
         TaskStartScenarioInPlace(npc, npcConfig.scenario or 'WORLD_HUMAN_CLIPBOARD', 0, true)
         
         spawnedNPCs['dutyToggle'] = npc
+        print("[Heli-Taxi] Duty Toggle NPC spawned successfully!")
+    else
+        print("[Heli-Taxi] ERROR: DutyToggle is not a vector4 or is nil!")
     end
+    
+    print("[Heli-Taxi] Checking VehicleManagement location...")
+    print("[Heli-Taxi] VehicleManagement = " .. tostring(Config.Locations.VehicleManagement))
     
     -- Spawn Vehicle Management NPC (if it's a vector4, it's an NPC location)
     if Config.Locations.VehicleManagement and type(Config.Locations.VehicleManagement) == 'vector4' then
+        print("[Heli-Taxi] Spawning Vehicle Management NPC...")
         local npcConfig = Config.Locations.VehicleManagementNPC or {}
         local model = GetHashKey(npcConfig.model or 's_m_m_pilot_02')
         
+        print("[Heli-Taxi] Requesting model: " .. tostring(npcConfig.model or 's_m_m_pilot_02'))
         RequestModel(model)
         while not HasModelLoaded(model) do
             Wait(1)
         end
+        print("[Heli-Taxi] Model loaded!")
         
-        -- Get ground Z coordinate with offset to prevent floating
-        local groundZ = Config.Locations.VehicleManagement.z
-        local found, zCoord = GetGroundZFor_3dCoord(Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z + 5.0, false)
-        if found then
-            groundZ = zCoord + 1.0  -- +1.0 offset so NPC stands ON ground
-        end
-        
-        local npc = CreatePed(4, model, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, groundZ, Config.Locations.VehicleManagement.w, false, true)
-        SetEntityCoordsNoOffset(npc, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, groundZ, false, false, false)
+        -- Use exact Z coordinate from config (works for both interior and exterior)
+        local npc = CreatePed(4, model, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z, Config.Locations.VehicleManagement.w, false, true)
+        print("[Heli-Taxi] Vehicle Management NPC created, entity ID: " .. tostring(npc))
+        SetEntityCoordsNoOffset(npc, Config.Locations.VehicleManagement.x, Config.Locations.VehicleManagement.y, Config.Locations.VehicleManagement.z, false, false, false)
         SetEntityHeading(npc, Config.Locations.VehicleManagement.w)
         FreezeEntityPosition(npc, true)
         SetEntityInvincible(npc, true)
@@ -82,7 +136,12 @@ CreateThread(function()
         TaskStartScenarioInPlace(npc, npcConfig.scenario or 'WORLD_HUMAN_CLIPBOARD', 0, true)
         
         spawnedNPCs['vehicleManagement'] = npc
+        print("[Heli-Taxi] Vehicle Management NPC spawned successfully!")
+    else
+        print("[Heli-Taxi] ERROR: VehicleManagement is not a vector4 or is nil!")
     end
+    
+    print("[Heli-Taxi] NPC spawn thread completed!")
 end)
 
 -- Cleanup NPCs on resource stop
@@ -215,7 +274,7 @@ CreateThread(function()
         local currentHelpText = nil
         
         -- Boss Menu Marker
-        local bossMenuDist = #(playerCoords - Config.Locations.BossMenu)
+        local bossMenuDist = #(playerCoords - vec3(Config.Locations.BossMenu.x, Config.Locations.BossMenu.y, Config.Locations.BossMenu.z))
         if bossMenuDist < Config.DrawDistance then
             sleep = 0
             DrawMarker(
@@ -229,13 +288,17 @@ CreateThread(function()
             
             if bossMenuDist < 2.0 then
                 currentHelpText = 'boss_menu'
-                Framework.ShowHelpNotification(_U('open_boss_menu'))
+                if Framework and Framework.ShowHelpNotification then
+                    Framework.ShowHelpNotification(_U('open_boss_menu'))
+                end
                 
                 if IsControlJustReleased(0, 38) then -- E key
                     if isEmployee then
                         OpenBossMenu()
                     else
-                        Framework.Notify(_U('not_employee'), 'error')
+                        if Framework and Framework.Notify then
+                            Framework.Notify(_U('not_employee'), 'error')
+                        end
                     end
                 end
             end
@@ -243,7 +306,7 @@ CreateThread(function()
         
         -- Wardrobe Marker - FIX: Allow Boss to access even without employee check
         if Config.Locations.Wardrobe and (isEmployee or IsBoss()) then
-            local wardrobeDist = #(playerCoords - Config.Locations.Wardrobe)
+            local wardrobeDist = #(playerCoords - vec3(Config.Locations.Wardrobe.x, Config.Locations.Wardrobe.y, Config.Locations.Wardrobe.z))
             if wardrobeDist < Config.DrawDistance then
                 sleep = 0
                 DrawMarker(
@@ -257,13 +320,17 @@ CreateThread(function()
                 
                 if wardrobeDist < 2.0 then
                     currentHelpText = 'wardrobe'
-                    Framework.ShowHelpNotification(_U('open_wardrobe'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('open_wardrobe'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee or IsBoss() then
                             OpenWardrobe()
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
@@ -277,15 +344,19 @@ CreateThread(function()
             if dutyDist < Config.DrawDistance then
                 sleep = 0
                 
-                if dutyDist < (Config.Locations.VehicleManagementNPC and Config.Locations.VehicleManagementNPC.interactDistance or 2.5) then
+                if dutyDist < (Config.Locations.DutyNPC and Config.Locations.DutyNPC.interactDistance or 2.5) then
                     currentHelpText = 'duty_toggle'
-                    Framework.ShowHelpNotification(_U('toggle_duty'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('toggle_duty'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee then
                             TriggerServerEvent('heli-taxi:server:toggleDuty')
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
@@ -300,13 +371,17 @@ CreateThread(function()
                 
                 if vmDist < (Config.Locations.VehicleManagementNPC and Config.Locations.VehicleManagementNPC.interactDistance or 2.5) then
                     currentHelpText = 'vehicle_management'
-                    Framework.ShowHelpNotification(_U('open_vehicle_management'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('open_vehicle_management'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee then
                             OpenVehicleManagement()
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
@@ -315,7 +390,7 @@ CreateThread(function()
         
         -- Vehicle Shop Marker (Normal) - FIX: Allow Boss to access even without employee check
         if Config.Locations.VehicleShop and (isEmployee or IsBoss()) then
-            local shopDist = #(playerCoords - Config.Locations.VehicleShop)
+            local shopDist = #(playerCoords - vec3(Config.Locations.VehicleShop.x, Config.Locations.VehicleShop.y, Config.Locations.VehicleShop.z))
             if shopDist < Config.DrawDistance then
                 sleep = 0
                 DrawMarker(
@@ -329,13 +404,17 @@ CreateThread(function()
                 
                 if shopDist < 2.0 then
                     currentHelpText = 'vehicle_shop'
-                    Framework.ShowHelpNotification(_U('open_vehicle_shop'))
+                    if Framework and Framework.ShowHelpNotification then
+                        Framework.ShowHelpNotification(_U('open_vehicle_shop'))
+                    end
                     
                     if IsControlJustReleased(0, 38) then -- E key
                         if isEmployee or IsBoss() then
                             OpenVehicleShop()
                         else
-                            Framework.Notify(_U('not_employee'), 'error')
+                            if Framework and Framework.Notify then
+                                Framework.Notify(_U('not_employee'), 'error')
+                            end
                         end
                     end
                 end
