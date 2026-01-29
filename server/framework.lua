@@ -106,7 +106,7 @@ function Framework.GetRankFromGrade(grade, source)
             print('[DEBUG-SERVER]   └─ Grade Name: ' .. tostring(gradeName))
             
             -- Check if this grade name exists in our config
-            if Config.Ranks[gradeName] then
+            if Config.Ranks and Config.Ranks[gradeName] then
                 print('[DEBUG-SERVER]   └─ ✅ Using QB-Core grade name: ' .. gradeName)
                 return gradeName
             else
@@ -118,7 +118,7 @@ function Framework.GetRankFromGrade(grade, source)
         if xPlayer and xPlayer.job and xPlayer.job.name == Config.JobName then
             local gradeName = xPlayer.job.grade_name
             -- Check if this grade name exists in our config
-            if Config.Ranks[gradeName] then
+            if Config.Ranks and Config.Ranks[gradeName] then
                 print('[DEBUG-SERVER]   └─ ✅ Using ESX grade name: ' .. gradeName)
                 return gradeName
             end

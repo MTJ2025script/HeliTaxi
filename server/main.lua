@@ -442,7 +442,7 @@ end)
 
 -- Salary Payment System
 CreateThread(function()
-    if not Config.Salary.enabled then return end
+    if not Config.Salary or not Config.Salary.enabled then return end
     
     while true do
         Wait(Config.Salary.payInterval * 60000) -- Convert minutes to milliseconds
