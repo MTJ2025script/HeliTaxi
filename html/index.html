@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeliTaxi Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>HeliTaxi Management</h1>
+                <button class="close-btn" id="close-btn">✕</button>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="dashboard">Dashboard</button>
+                <button class="tab" data-tab="fleet">Fleet</button>
+                <button class="tab" data-tab="employees">Employees</button>
+                <button class="tab" data-tab="finances">Finances</button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <h2>Dashboard Overview</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Flights Today</div>
+                            <div class="stat-value" id="total-flights">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Helicopters</div>
+                            <div class="stat-value" id="active-helicopters">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Revenue</div>
+                            <div class="stat-value" id="total-revenue">$0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Employees Online</div>
+                            <div class="stat-value" id="employees-online">0</div>
+                        </div>
+                    </div>
+                    <div class="info-message">
+                        <p>✅ HeliTaxi operates as a legal transport service</p>
+                        <p>All locations are authorized and compliant</p>
+                    </div>
+                </div>
+
+                <!-- Fleet Tab -->
+                <div id="fleet" class="tab-content">
+                    <h2>Fleet Management</h2>
+                    <div class="fleet-list" id="fleet-list">
+                        <div class="fleet-item">
+                            <div class="fleet-name">Helicopter Alpha</div>
+                            <div class="fleet-status status-available">Available</div>
+                            <div class="fleet-location">Vespucci Helipad</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employees Tab -->
+                <div id="employees" class="tab-content">
+                    <h2>Employee Management</h2>
+                    <div class="employee-list" id="employee-list">
+                        <p class="no-data">No employees online</p>
+                    </div>
+                </div>
+
+                <!-- Finances Tab -->
+                <div id="finances" class="tab-content">
+                    <h2>Financial Overview</h2>
+                    <div class="finance-summary">
+                        <div class="finance-row">
+                            <span>Today's Income:</span>
+                            <span class="finance-value" id="today-income">$0</span>
+                        </div>
+                        <div class="finance-row">
+                            <span>This Week:</span>
+                            <span class="finance-value" id="week-income">$0</span>
+                        </div>
+                        <div class="finance-row">
+                            <span>This Month:</span>
+                            <span class="finance-value" id="month-income">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permission Error Message -->
+            <div id="permission-error" class="error-message hidden">
+                <p>⚠️ Access Denied</p>
+                <p>You don't have permission to access this menu.</p>
+                <p>Required rank: Manager or above</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
