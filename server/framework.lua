@@ -127,8 +127,9 @@ function Framework.GetRankFromGrade(grade, source)
     
     -- Fallback to number-based lookup
     local ranks = {'junior_pilot', 'pilot', 'assistant', 'boss', 'illegal'}
-    local rank = ranks[grade + 1] or 'junior_pilot'
-    print('[DEBUG-SERVER]   └─ Fallback: grade ' .. tostring(grade) .. ' → array index ' .. tostring(grade + 1) .. ' → rank: ' .. rank)
+    local gradeNum = tonumber(grade) or 0
+    local rank = ranks[gradeNum + 1] or 'junior_pilot'
+    print('[DEBUG-SERVER]   └─ Fallback: grade ' .. tostring(grade) .. ' → array index ' .. tostring(gradeNum + 1) .. ' → rank: ' .. rank)
     return rank
 end
 

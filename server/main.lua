@@ -309,7 +309,11 @@ RegisterNetEvent('heli-taxi:server:getEmployeeInfo', function()
     
     if IsEmployee(identifier, src) then
         local emp = GetEmployee(identifier, src)
-        TriggerClientEvent('heli-taxi:client:updateEmployeeInfo', src, emp)
+        if emp then
+            TriggerClientEvent('heli-taxi:client:updateEmployeeInfo', src, emp)
+        else
+            TriggerClientEvent('heli-taxi:client:updateEmployeeInfo', src, nil)
+        end
     else
         TriggerClientEvent('heli-taxi:client:updateEmployeeInfo', src, nil)
     end
@@ -325,7 +329,8 @@ RegisterNetEvent('heli-taxi:server:requestEmployeeDataForMenu', function()
         TriggerClientEvent('heli-taxi:client:openBossMenuWithData', src, emp)
     else
         -- Even if not found in database, check if Boss
-        local rank = Framework.GetJobRank(src)
+        local grade = Framework.GetJobGrade(src)
+        local rank = Framework.GetRankFromGrade(grade, src)
         if rank == 'boss' then
             -- Create minimal employee data for Boss
             local emp = {
@@ -356,6 +361,11 @@ RegisterNetEvent('heli-taxi:server:toggleDuty', function()
     end
     
     local emp = GetEmployee(identifier, src)
+    if not emp then
+        Framework.Notify(src, 'Fehler beim Laden der Mitarbeiterdaten', 'error')
+        return
+    end
+    
     local newStatus = emp.status == 'on_duty' and 'off_duty' or 'on_duty'
     
     -- Update in database if using internal system
@@ -391,7 +401,7 @@ RegisterNetEvent('heli-taxi:server:getAllEmployees', function()
         -- If using Framework job system and boss not in DB, add them to the list
         -- Boss wird als rank='boss' hinzugefügt (NICHT als 'illegal')
         if Framework.HasJob(src) and not Employees[identifier] then
-            local bossRank = Framework.GetRankFromGrade(Framework.GetJobGrade(src))
+            local bossRank = Framework.GetRankFromGrade(Framework.GetJobGrade(src), src)
             local bossData = {
                 identifier = identifier,
                 name = Framework.GetPlayerName(src),
@@ -459,26 +469,36 @@ CreateThread(function()
                 
                 -- Check if company has enough money
                 MySQL.query('SELECT balance FROM heli_taxi_company LIMIT 1', {}, function(result)
+                    if not result then
+                        print('[Heli-Taxi] ERROR: Failed to fetch company balance for salary payment')
+                        return
+                    end
+                    
                     if result and result[1] and result[1].balance >= salary then
                         -- Pay salary
                         MySQL.update('UPDATE heli_taxi_company SET balance = balance - ?, total_expenses = total_expenses + ?', 
-                            {salary, salary})
-                        
-                        -- Log transaction
-                        MySQL.insert('INSERT INTO heli_taxi_transactions (transaction_type, amount, description, performer_identifier, performer_name) VALUES (?, ?, ?, ?, ?)',
-                            {'salary', salary, 'Salary payment to ' .. emp.name, emp.identifier, emp.name})
-                        
-                        -- Notify player if online
-                        for _, playerId in ipairs(GetPlayers()) do
-                            local playerIdentifier = Framework.GetIdentifier(tonumber(playerId))
-                            if playerIdentifier == emp.identifier then
-                                Framework.AddMoney(tonumber(playerId), salary)
-                                Framework.Notify(tonumber(playerId), 'You received your salary: $' .. salary, 'success')
-                                break
+                            {salary, salary}, function(affectedRows)
+                            if not affectedRows or affectedRows <= 0 then
+                                print('[Heli-Taxi] ERROR: Failed to deduct salary from company balance')
+                                return
                             end
-                        end
-                        
-                        print('[Heli-Taxi] Paid salary of $' .. salary .. ' to ' .. emp.name)
+                            
+                            -- Log transaction
+                            MySQL.insert('INSERT INTO heli_taxi_transactions (transaction_type, amount, description, performer_identifier, performer_name) VALUES (?, ?, ?, ?, ?)',
+                                {'salary', salary, 'Salary payment to ' .. emp.name, emp.identifier, emp.name})
+                            
+                            -- Notify player if online
+                            for _, playerId in ipairs(GetPlayers()) do
+                                local playerIdentifier = Framework.GetIdentifier(tonumber(playerId))
+                                if playerIdentifier == emp.identifier then
+                                    Framework.AddMoney(tonumber(playerId), salary)
+                                    Framework.Notify(tonumber(playerId), 'You received your salary: $' .. salary, 'success')
+                                    break
+                                end
+                            end
+                            
+                            print('[Heli-Taxi] Paid salary of $' .. salary .. ' to ' .. emp.name)
+                        end)
                     else
                         print('[Heli-Taxi] Insufficient company funds to pay salary to ' .. emp.name)
                     end
