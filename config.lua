@@ -141,19 +141,19 @@ Config.CompanyBlip = {
 
 Config.Locations = {
     -- Boss Menü (MARKER)
-    BossMenu = vector3(-126.0284, -641.1374, 168.8204),
+    BossMenu = vector3(-80.6845, -802.2084, 243.4008, 313.4329),
     
     -- Garderobe (MARKER)
-    Wardrobe = vector3(-130.9768, -633.5480, 168.8204),
+    Wardrobe = vector3(-78.2652, -810.8976, 243.3859, 258.1677),
     
     -- Duty Toggle (NPC)
-    DutyToggle = vector4(-139.2165, -633.9833, 168.8204, 354.6650),
+    DutyToggle = vector4(-72.1056, -814.4688, 243.3859, 164.1552),
     
     -- Fahrzeugverwaltung (NPC)
-    VehicleManagement = vector4(-727.0356, -1499.9502, 5.0005, 335.2927),
+    VehicleManagement = vector4(-59.0201, -809.9679, 243.3859, 8.9443),
     
     -- Fahrzeug Shop (MARKER)
-    VehicleShop = vector3(-145.7871, -635.7437, 168.8204),
+    VehicleShop = vector3(-64.7401, -814.2730, 243.3859, 122.5563),
     
     -- Hauptstandort HQ (für Blip)
     HQ = vector3(-734.9818, -1483.6512, 5.0005),
