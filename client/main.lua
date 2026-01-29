@@ -6,19 +6,40 @@ local employeeData = nil
 -- NPC Storage
 local spawnedNPCs = {}
 
--- Load Maze Bank Tower Interior (for office locations)
+-- Load Maze Bank Tower Interior (based on bob74_ipl best practices)
+-- Source: https://github.com/Bob74/bob74_ipl/blob/master/dlc_finance/office2.lua
 CreateThread(function()
-    -- Request the Maze Bank Tower IPL
-    RequestIpl("ex_dt1_02_office_02b")  -- Executive Office
+    print("[Heli-Taxi] Loading Maze Bank Tower interior...")
     
-    -- Get the interior ID
-    local interiorId = GetInteriorAtCoords(-75.8466, -826.9893, 243.3859)
+    -- Maze Bank Tower Office 2 coordinates: -75.8466, -826.9893, 243.3859
+    -- Using "rich" style (ex_dt1_11_office_02b) - Interior ID 239617
+    local officeName = "ex_dt1_11_office_02b"
+    local interiorId = 239617  -- Rich style interior ID
     
-    if interiorId ~= 0 then
-        -- Enable all interior props
+    -- Request the IPL
+    RequestIpl(officeName)
+    
+    -- Wait for IPL to load
+    Wait(500)
+    
+    -- Enable office props (standard from bob74_ipl)
+    if IsValidInterior(interiorId) then
         EnableInteriorProp(interiorId, "office_chairs")
+        EnableInteriorProp(interiorId, "office_booze")
+        
+        -- Refresh the interior to apply changes
         RefreshInterior(interiorId)
-        print("[Heli-Taxi] Maze Bank Tower interior loaded")
+        print("[Heli-Taxi] Maze Bank Tower interior loaded (ID: " .. interiorId .. ")")
+    else
+        -- Fallback: Try dynamic interior ID detection
+        local dynamicInteriorId = GetInteriorAtCoords(-75.8466, -826.9893, 243.3859)
+        if dynamicInteriorId ~= 0 then
+            EnableInteriorProp(dynamicInteriorId, "office_chairs")
+            RefreshInterior(dynamicInteriorId)
+            print("[Heli-Taxi] Maze Bank Tower interior loaded (Dynamic ID: " .. dynamicInteriorId .. ")")
+        else
+            print("[Heli-Taxi] Warning: Could not load Maze Bank Tower interior")
+        end
     end
 end)
 
